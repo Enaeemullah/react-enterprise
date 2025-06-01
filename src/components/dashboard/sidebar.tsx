@@ -3,7 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import { 
   Package, Users, Home, ShoppingCart, BarChart3, 
   Layers, ChevronRight, X, Building2, Shield, Store,
-  Boxes, Activity
+  Boxes, Activity,
+  Flower2
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { useAuth } from "../../contexts/auth-context";
@@ -61,7 +62,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       <div className="flex items-center justify-center h-16 px-6 border-b border-gray-200 dark:border-gray-700">
         <Link to="/dashboard" className="flex items-center">
           <span className="text-xl font-semibold text-primary-600 dark:text-primary-400">
-            Enterprise
+            <Flower2 className="h-8 w-8 mr-2" />
           </span>
         </Link>
       </div>
@@ -144,12 +145,12 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                 className="h-10 w-10 object-cover"
               />
             ) : (
-              <span className="font-medium text-gray-700">{user?.name?.[0]}</span>
+              <span className="font-medium text-gray-700">{user?.firstName?.[0]}</span>
             )}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-              {user?.name}
+              {user?.firstName}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
               {user?.email}

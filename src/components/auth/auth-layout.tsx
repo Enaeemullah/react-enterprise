@@ -4,6 +4,7 @@ import { Slider, type Slide } from "../ui/slider";
 import image1 from "../../assets/images/1.jpg";
 import image2 from "../../assets/images/2.jpg";
 import image3 from "../../assets/images/3.jpeg";
+import { Package } from "lucide-react";
 
 const slides: Slide[] = [
   {
@@ -33,10 +34,15 @@ export function AuthLayout() {
       <div className="hidden md:block">
         <Slider slides={slides} className="h-full" />
       </div>
-
+      
       {/* Form Section */}
       <div className="flex flex-col justify-center p-4 sm:p-6 md:p-8 lg:p-12">
         <div className="w-full max-w-md mx-auto">
+          <div className="flex justify-center mb-8">
+            <div className="flex items-center gap-2">
+              <Package className="h-8 w-8 text-primary-800" />
+            </div>
+          </div>
           <Outlet />
         </div>
       </div>

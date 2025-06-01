@@ -1,5 +1,6 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import { Toaster } from "sonner";
 
 // Contexts
 import { ThemeProvider } from "./contexts/theme-context";
@@ -33,12 +34,13 @@ import { ModulesPage } from "./pages/dashboard/modules";
 import { ActionsPage } from "./pages/dashboard/actions";
 import { CustomersPage } from "./pages/dashboard/customers";
 import { CustomerServicesPage } from "./pages/dashboard/customers/services";
+import { NotFoundPage } from "./pages/not-found";
 
 function App() {
   return (
     <ThemeProvider>
-      <GlobalProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <GlobalProvider>
           <ProfileProvider>
             <InventoryProvider>
               <Router>
@@ -89,19 +91,22 @@ function App() {
                     
                     {/* Reports placeholder */}
                     <Route path="reports" element={<div className="p-4">Reports page (Coming soon)</div>} />
-                    
-                    {/* Projects placeholder */}
-                    <Route path="projects" element={<div className="p-4">Projects page (Coming soon)</div>} />
                   </Route>
                   
-                  {/* Catch all */}
-                  <Route path="*" element={<Navigate to="/auth/signup\" replace />} />
+                  {/* 404 Not Found */}
+                  <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </Router>
+              <Toaster 
+                position="top-right"
+                expand={false}
+                richColors
+                closeButton
+              />
             </InventoryProvider>
           </ProfileProvider>
-        </AuthProvider>
-      </GlobalProvider>
+        </GlobalProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }

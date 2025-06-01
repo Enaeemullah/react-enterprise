@@ -109,4 +109,25 @@ export const API_ENDPOINTS = {
     update: '/profile',
     updatePreferences: '/profile/preferences',
   },
+    employees: {
+    list: '/employees',
+    create: '/employees',
+    update: '/employees/:id',
+    delete: '/employees/:id',
+    detail: '/employees/:id',
+  },
+  departments: {
+    list: '/departments',
+    create: '/departments',
+    update: '/departments/:id',
+    delete: '/departments/:id',
+    detail: '/departments/:id',
+  },
+  positions: {
+    list: '/positions',
+    create: '/positions',
+    update: '/positions/:id',
+    delete: '/positions/:id',
+    detail: '/positions/:id',
+  },
 };

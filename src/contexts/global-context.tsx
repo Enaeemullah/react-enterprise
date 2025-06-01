@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useState } from "react";
+import { toast } from "sonner";
+import { useAuth } from "./auth-context";
 
 interface GlobalContextType {
   isLoading: boolean;
@@ -7,21 +9,36 @@ interface GlobalContextType {
   setError: (error: string | null) => void;
   clearError: () => void;
   showSuccess: (message: string) => void;
-  successMessage: string | null;
+  showError: (message: string) => void;
+  showWarning: (message: string) => void;
+  showInfo: (message: string) => void;
+  organizationCode: string | null;
 }
 
 const GlobalContext = createContext<GlobalContextType | undefined>(undefined);
 
 export function GlobalProvider({ children }: { children: React.ReactNode }) {
+    const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const clearError = () => setError(null);
 
   const showSuccess = (message: string) => {
-    setSuccessMessage(message);
-    setTimeout(() => setSuccessMessage(null), 3000);
+    toast.success(message);
+  };
+
+  const showError = (message: string) => {
+    toast.error(message);
+    setError(message);
+  };
+
+  const showWarning = (message: string) => {
+    toast.warning(message);
+  };
+
+  const showInfo = (message: string) => {
+    toast.info(message);
   };
 
   return (
@@ -33,7 +50,10 @@ export function GlobalProvider({ children }: { children: React.ReactNode }) {
         setError,
         clearError,
         showSuccess,
-        successMessage,
+        showError,
+        showWarning,
+        showInfo,
+        organizationCode: user?.orga_code || null,
       }}
     >
       {children}

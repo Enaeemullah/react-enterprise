@@ -6,7 +6,12 @@ export interface CreateActionDTO {
   name: string;
   description: string;
   module: string;
-  type: 'create' | 'read' | 'update' | 'delete' | 'custom';
+  permissions: {
+    create: boolean;
+    read: boolean;
+    update: boolean;
+    delete: boolean;
+  };
 }
 
 export const actionService = {

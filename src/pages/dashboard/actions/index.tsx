@@ -10,7 +10,12 @@ export interface Action {
   name: string;
   description: string;
   module: string;
-  type: "create" | "read" | "update" | "delete" | "custom";
+  permissions: {
+    create: boolean;
+    read: boolean;
+    update: boolean;
+    delete: boolean;
+  };
   createdAt: string;
   updatedAt: string;
 }

@@ -103,7 +103,7 @@ export function LoginForm() {
         </p>
       </form>
 
-      {APP_CONFIG.auth.useDummyAuth && (
+      {/* {APP_CONFIG.auth.useDummyAuth && (
         <>
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
@@ -127,7 +127,7 @@ export function LoginForm() {
             </p>
           </div>
         </>
-      )}
+      )} */}
     </div>
   );
 }
