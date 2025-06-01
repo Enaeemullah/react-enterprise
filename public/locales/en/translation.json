@@ -1,0 +1,46 @@
+{
+  "profile": {
+    "title": "Your Profile",
+    "role": "Role",
+    "department": "Department",
+    "position": "Position",
+    "editProfile": "Edit Profile",
+    "name": "Name",
+    "bio": "Bio",
+    "bioPlaceholder": "Tell us about yourself",
+    "location": "Location",
+    "locationPlaceholder": "City, Country",
+    "phoneNumber": "Phone Number",
+    "phonePlaceholder": "+1 (555) 123-4567",
+    "departmentPlaceholder": "e.g. Marketing",
+    "positionPlaceholder": "e.g. Senior Manager",
+    "changePassword": "Change Password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "confirmPassword": "Confirm New Password",
+    "updateSuccess": "Profile updated successfully!",
+    "passwordChangeSuccess": "Password changed successfully!",
+    "passwordChangeError": "Failed to change password. Please check your current password."
+  },
+  "inventory": {
+    "basicInfo": "Inventory Management",
+    "description": "Manage your products, stock levels, and suppliers",
+    "addProduct": "Add New Product",
+    "productName": "Product Name",
+    "productDescription": "Product Description",
+    "quantity": "Quantity",
+    "price": "Price",
+    "supplier": "Supplier",
+    "addSupplier": "Add Supplier",
+    "supplierName": "Supplier Name",
+    "supplierContact": "Supplier Contact",
+    "saveProduct": "Save Product",
+    "updateProduct": "Update Product",
+    "deleteProduct": "Delete Product"
+  },
+  "common": {
+    "save": "Save Changes",
+    "cancel": "Cancel",
+    "loading": "Loading..."
+  }
+}

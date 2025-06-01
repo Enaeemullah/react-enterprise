@@ -1,0 +1,24 @@
+{
+  "reports": {
+    "title": "Informes y Análisis",
+    "description": "Ver informes detallados y análisis sobre su negocio",
+    "timeRange": "Rango de Tiempo",
+    "custom": "Rango Personalizado",
+    "startDate": "Fecha de Inicio",
+    "endDate": "Fecha de Fin",
+    "day": "Hoy",
+    "week": "Esta Semana",
+    "month": "Este Mes",
+    "year": "Este Año",
+    "salesDescription": "Seguimiento del rendimiento de ventas",
+    "inventoryDescription": "Monitorear niveles y movimientos de inventario",
+    "revenueDescription": "Analizar ingresos y gastos",
+    "customersDescription": "Comprender el comportamiento y tendencias de los clientes",
+    "export": {
+      "title": "Exportar Informe",
+      "pdf": "Exportar como PDF",
+      "csv": "Exportar como CSV",
+      "excel": "Exportar como Excel"
+    }
+  }
+}

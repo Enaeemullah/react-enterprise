@@ -138,15 +138,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       <div className="border-t border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center space-x-3">
           <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-            {user?.avatar ? (
-              <img 
-                src={user.avatar} 
-                alt={`${user.name}'s avatar`} 
-                className="h-10 w-10 object-cover"
-              />
-            ) : (
               <span className="font-medium text-gray-700">{user?.firstName?.[0]}</span>
-            )}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 dark:text-white truncate">

@@ -1,31 +1,63 @@
 import React from "react";
 import { Edit, Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
-import { formatDate } from "../../lib/utils";
+
+// Mock data for demonstration
+const MOCK_SUPPLIERS = [
+  {
+    id: "1",
+    name: "Tech Supplies Co",
+    contactPerson: "John Smith",
+    email: "john@techsupplies.com",
+    phone: "+1 (555) 123-4567",
+    address: "123 Tech Street",
+    city: "San Francisco",
+    state: "CA",
+    country: "United States",
+    zipCode: "94105",
+    status: "active" as const,
+    createdAt: "2024-03-15T10:00:00Z",
+    updatedAt: "2024-03-15T10:00:00Z",
+  },
+  {
+    id: "2",
+    name: "Global Electronics",
+    contactPerson: "Jane Doe",
+    email: "jane@globalelec.com",
+    phone: "+1 (555) 987-6543",
+    address: "456 Electronics Ave",
+    city: "New York",
+    state: "NY",
+    country: "United States",
+    zipCode: "10001",
+    status: "active" as const,
+    createdAt: "2024-03-15T10:00:00Z",
+    updatedAt: "2024-03-15T10:00:00Z",
+  },
+];
 
 export interface Supplier {
   id: string;
   name: string;
+  contactPerson: string;
   email: string;
   phone: string;
   address: string;
   city: string;
   state: string;
-  zipCode: string;
   country: string;
-  contactPerson: string;
+  zipCode: string;
   status: "active" | "inactive";
   createdAt: string;
   updatedAt: string;
 }
 
 interface SupplierListProps {
-  suppliers: Supplier[];
   onEdit: (supplier: Supplier) => void;
   onDelete: (supplier: Supplier) => void;
 }
 
-export function SupplierList({ suppliers, onEdit, onDelete }: SupplierListProps) {
+export function SupplierList({ onEdit, onDelete }: SupplierListProps) {
   return (
     <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden">
       <div className="overflow-x-auto">
@@ -50,7 +82,7 @@ export function SupplierList({ suppliers, onEdit, onDelete }: SupplierListProps)
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {suppliers.map((supplier) => (
+            {MOCK_SUPPLIERS.map((supplier) => (
               <tr key={supplier.id}>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm font-medium text-gray-900 dark:text-white">

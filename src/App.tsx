@@ -35,6 +35,8 @@ import { ActionsPage } from "./pages/dashboard/actions";
 import { CustomersPage } from "./pages/dashboard/customers";
 import { CustomerServicesPage } from "./pages/dashboard/customers/services";
 import { NotFoundPage } from "./pages/not-found";
+import { SocketProvider } from "./contexts/socket-context";
+import { ReportsPage } from "./pages/dashboard/reports";
 
 function App() {
   return (
@@ -43,6 +45,7 @@ function App() {
         <GlobalProvider>
           <ProfileProvider>
             <InventoryProvider>
+               <SocketProvider>
               <Router>
                 <Routes>
                   {/* Redirect root to signup */}
@@ -90,7 +93,7 @@ function App() {
                     <Route path="services" element={<div className="p-4">Services page (Coming soon)</div>} />
                     
                     {/* Reports placeholder */}
-                    <Route path="reports" element={<div className="p-4">Reports page (Coming soon)</div>} />
+                    <Route path="reports" element={<ReportsPage />} />
                   </Route>
                   
                   {/* 404 Not Found */}
@@ -103,6 +106,7 @@ function App() {
                 richColors
                 closeButton
               />
+              </SocketProvider>
             </InventoryProvider>
           </ProfileProvider>
         </GlobalProvider>

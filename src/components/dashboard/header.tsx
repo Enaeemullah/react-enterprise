@@ -1,16 +1,15 @@
-// src/components/dashboard/header.tsx
 import React from "react";
-import { Bell, Menu, Moon, Search, Sun, Settings, LogOut } from "lucide-react";
+import { Bell, Menu, Moon, Search, Sun } from "lucide-react";
 import { useAuth } from "../../contexts/auth-context";
 import { useTheme } from "../../contexts/theme-context";
-import { Link } from "react-router-dom";
+import { LanguageSwitcher } from "../ui/language-switcher";
 
 interface HeaderProps {
   onMenuButtonClick: () => void;
 }
 
 export function Header({ onMenuButtonClick }: HeaderProps) {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [showProfileMenu, setShowProfileMenu] = React.useState(false);
 
@@ -18,7 +17,7 @@ export function Header({ onMenuButtonClick }: HeaderProps) {
     <header className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
       <div className="px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Left section: Menu button & search */}
+          {/* Left section */}
           <div className="flex items-center">
             <button
               type="button"
@@ -42,8 +41,10 @@ export function Header({ onMenuButtonClick }: HeaderProps) {
             </div>
           </div>
 
-          {/* Right section: Notifications, theme toggle & profile */}
+          {/* Right section */}
           <div className="flex items-center space-x-4">
+            <LanguageSwitcher />
+            
             <button
               type="button"
               className="p-1 rounded-full text-gray-500 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
@@ -70,41 +71,45 @@ export function Header({ onMenuButtonClick }: HeaderProps) {
                 onClick={() => setShowProfileMenu(!showProfileMenu)}
               >
                 <span className="sr-only">Open user menu</span>
-                <div className="h-8 w-8 rounded-full bg-primary-100 dark:bg-primary-800 flex items-center justify-center">
-                  <span className="font-medium text-primary-700 dark:text-primary-200">
-                    {user?.firstName?.[0]}
-                  </span>
+                <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
+                  {user?.avatar ? (
+                    <img 
+                      src={user.avatar} 
+                      alt={`${user.firstName}'s avatar`} 
+                      className="h-8 w-8 object-cover"
+                    />
+                  ) : (
+                    <span className="font-medium text-gray-700">{user?.firstName?.[0]}</span>
+                  )}
                 </div>
               </button>
               
               {showProfileMenu && (
-                <div className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none">
+                <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none">
                   <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {user?.firstName}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
-                      {user?.email}
-                    </p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.name}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
                   </div>
-                  <Link
-                    to="/dashboard/profile"
+                  <a
+                    href="/dashboard/profile"
                     className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
-                    <div className="flex items-center">
-                      <Settings className="h-4 w-4 mr-2" />
-                      Settings
-                    </div>
-                  </Link>
-                  <button
-                    onClick={logout}
-                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    Your Profile
+                  </a>
+                  <a
+                    href="/dashboard/settings"
+                    className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
                   >
-                    <div className="flex items-center">
-                      <LogOut className="h-4 w-4 mr-2" />
+                    Settings
+                  </a>
+                  <div className="border-t border-gray-100 dark:border-gray-700">
+                    <a
+                      href="/auth/logout"
+                      className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    >
                       Sign out
-                    </div>
-                  </button>
+                    </a>
+                  </div>
                 </div>
               )}
             </div>

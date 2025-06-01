@@ -1,0 +1,30 @@
+{
+  "profile": {
+    "title": "Tu Perfil",
+    "role": "Rol",
+    "department": "Departamento",
+    "position": "Cargo",
+    "editProfile": "Editar Perfil",
+    "name": "Nombre",
+    "bio": "Biografía",
+    "bioPlaceholder": "Cuéntanos sobre ti",
+    "location": "Ubicación",
+    "locationPlaceholder": "Ciudad, País",
+    "phoneNumber": "Teléfono",
+    "phonePlaceholder": "+1 (555) 123-4567",
+    "departmentPlaceholder": "ej. Marketing",
+    "positionPlaceholder": "ej. Gerente Senior",
+    "changePassword": "Cambiar Contraseña",
+    "currentPassword": "Contraseña Actual",
+    "newPassword": "Nueva Contraseña",
+    "confirmPassword": "Confirmar Nueva Contraseña",
+    "updateSuccess": "¡Perfil actualizado exitosamente!",
+    "passwordChangeSuccess": "¡Contraseña cambiada exitosamente!",
+    "passwordChangeError": "Error al cambiar la contraseña. Por favor, verifica tu contraseña actual."
+  },
+  "common": {
+    "save": "Guardar Cambios",
+    "cancel": "Cancelar",
+    "loading": "Cargando..."
+  }
+}

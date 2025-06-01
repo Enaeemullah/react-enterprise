@@ -25,6 +25,7 @@ interface AuthContextType {
     phoneNo: string;
     password: string;
   }) => Promise<void>;
+  changePassword: (currentPassword: string, newPassword: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -92,6 +93,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const changePassword = async (currentPassword: string, newPassword: string) => {
+    setIsLoading(true);
+    try {
+      await authService.changePassword({ currentPassword, newPassword });
+    } catch (error) {
+      throw new Error("Failed to change password");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = () => {
     setUser(null);
     setToken(null);
@@ -108,6 +120,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isLoading,
         login,
         signup,
+        changePassword,
         logout,
       }}
     >

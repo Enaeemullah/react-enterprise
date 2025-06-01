@@ -1,0 +1,24 @@
+{
+  "reports": {
+    "title": "Reports & Analytics",
+    "description": "View detailed reports and analytics about your business",
+    "timeRange": "Time Range",
+    "custom": "Custom Range",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "day": "Today",
+    "week": "This Week",
+    "month": "This Month",
+    "year": "This Year",
+    "salesDescription": "Track sales performance over time",
+    "inventoryDescription": "Monitor inventory levels and movements",
+    "revenueDescription": "Analyze revenue and expenses",
+    "customersDescription": "Understand customer behavior and trends",
+    "export": {
+      "title": "Export Report",
+      "pdf": "Export as PDF",
+      "csv": "Export as CSV",
+      "excel": "Export as Excel"
+    }
+  }
+}

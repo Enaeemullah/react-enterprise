@@ -31,6 +31,7 @@ export const API_ENDPOINTS = {
     login: '/auth/login',
     signup: '/auth/signup',
     logout: '/auth/logout',
+    changePassword: '/auth/change-password'
   },
   inventory: {
     list: '/inventory',

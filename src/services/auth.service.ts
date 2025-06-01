@@ -16,6 +16,11 @@ export interface LoginData {
   password: string;
 }
 
+export interface ChangePasswordData {
+  currentPassword: string;
+  newPassword: string;
+}
+
 export interface AuthResponse {
   token: string;
   role: string;
@@ -33,6 +38,10 @@ export const authService = {
   async signup(data: SignupData): Promise<AuthResponse> {
     const response = await api.post(API_ENDPOINTS.auth.signup, data);
     return response.data;
+  },
+
+  async changePassword(data: ChangePasswordData): Promise<void> {
+    await api.post(API_ENDPOINTS.auth.changePassword, data);
   },
 
   async logout() {
