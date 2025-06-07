@@ -253,7 +253,7 @@ export function InventoryTable({
                         item.status
                       )}`}
                     >
-                      {item.status
+                      {(item.status ?? "")
                         .split("-")
                         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
                         .join(" ")}

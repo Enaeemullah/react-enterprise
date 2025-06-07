@@ -42,9 +42,9 @@ export const API_ENDPOINTS = {
   },
   branches: {
     list: '/branches',
-    create: '/branches',
-    update: '/branches/:id',
-    delete: '/branches/:id',
+    create: '/branches/create',
+    update: '/branches/:id/edit',
+    delete: '/branches/:id/delete',
     detail: '/branches/:id',
   },
   brands: {

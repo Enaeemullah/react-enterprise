@@ -4,6 +4,9 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
+import { branchService, CreateBranchDTO, UpdateBranchDTO } from "../../services/branch.service";
+import { useGlobal } from "../../contexts/global-context";
+import { useNotifications } from "../../contexts/notification-context";
 
 const branchSchema = z.object({
   name: z.string().min(2, "Branch name must be at least 2 characters"),
@@ -21,19 +24,25 @@ const branchSchema = z.object({
 type BranchFormValues = z.infer<typeof branchSchema>;
 
 interface BranchFormProps {
-  branch?: BranchFormValues;
-  onSubmit: (data: BranchFormValues) => Promise<void>;
+  branch?: any; // Can be Branch with id or just form values
   onCancel: () => void;
+  onSuccess?: () => void;
   isLoading?: boolean;
+  mode?: 'create' | 'edit' | 'view';
 }
 
-export function BranchForm({ branch, onSubmit, onCancel, isLoading }: BranchFormProps) {
-  const [error, setError] = useState<string | null>(null);
+export function BranchForm({ branch, onCancel, onSuccess, isLoading, mode = 'create' }: BranchFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { showSuccess, showError } = useGlobal();
+  const { notifyCreate, notifyUpdate } = useNotifications();
+  const isEditMode = mode === 'edit' || (branch && branch.id);
+  const isViewMode = mode === 'view';
 
   const {
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm<BranchFormValues>({
     resolver: zodResolver(branchSchema),
     defaultValues: branch || {
@@ -42,27 +51,62 @@ export function BranchForm({ branch, onSubmit, onCancel, isLoading }: BranchForm
   });
 
   const handleFormSubmit = async (data: BranchFormValues) => {
+    if (isViewMode) return; // Don't submit in view mode
+
     try {
-      setError(null);
-      await onSubmit(data);
+      setIsSubmitting(true);
+      
+      let result;
+      
+      if (isEditMode && branch?.id) {
+        // Update existing branch
+        console.log('Updating branch:', branch.id, data);
+        result = await branchService.updateBranch(branch.id, data as UpdateBranchDTO);
+        showSuccess("Branch updated successfully");
+        notifyUpdate("Branch", data.name, true);
+      } else {
+        // Create new branch
+        console.log('Creating new branch:', data);
+        result = await branchService.createBranch(data as CreateBranchDTO);
+        showSuccess("Branch created successfully");
+        notifyCreate("Branch", data.name, true);
+      }
+      
+      console.log('Operation completed successfully:', result);
+      
+      // Reset form if creating new branch
+      if (!isEditMode) {
+        reset();
+      }
+      
+      // Call success callback
+      if (onSuccess && typeof onSuccess === "function") {
+        onSuccess();
+      }
     } catch (err) {
-      setError((err as Error).message || "Failed to save branch");
+      console.error("Branch form submission error:", err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to save branch";
+      showError(errorMessage);
+      
+      // Notify about the error
+      if (isEditMode) {
+        notifyUpdate("Branch", data.name, false);
+      } else {
+        notifyCreate("Branch", data.name, false);
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
-      {error && (
-        <div className="bg-error-50 dark:bg-error-900/30 border border-error-300 dark:border-error-800 text-error-700 dark:text-error-400 px-4 py-3 rounded-md">
-          {error}
-        </div>
-      )}
-
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <Input
           label="Branch Name"
           placeholder="Main Branch"
           error={errors.name?.message}
+          disabled={isViewMode}
           {...register("name")}
         />
 
@@ -70,6 +114,7 @@ export function BranchForm({ branch, onSubmit, onCancel, isLoading }: BranchForm
           label="Branch Code"
           placeholder="MB001"
           error={errors.code?.message}
+          disabled={isViewMode}
           {...register("code")}
         />
       </div>
@@ -83,9 +128,10 @@ export function BranchForm({ branch, onSubmit, onCancel, isLoading }: BranchForm
         </label>
         <textarea
           id="address"
-          className="block w-full rounded-md shadow-sm px-3 py-2 sm:text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          className="block w-full rounded-md shadow-sm px-3 py-2 sm:text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
           rows={3}
           placeholder="Enter branch address"
+          disabled={isViewMode}
           {...register("address")}
         />
         {errors.address?.message && (
@@ -100,6 +146,7 @@ export function BranchForm({ branch, onSubmit, onCancel, isLoading }: BranchForm
           label="City"
           placeholder="New York"
           error={errors.city?.message}
+          disabled={isViewMode}
           {...register("city")}
         />
 
@@ -107,6 +154,7 @@ export function BranchForm({ branch, onSubmit, onCancel, isLoading }: BranchForm
           label="State"
           placeholder="NY"
           error={errors.state?.message}
+          disabled={isViewMode}
           {...register("state")}
         />
 
@@ -114,6 +162,7 @@ export function BranchForm({ branch, onSubmit, onCancel, isLoading }: BranchForm
           label="Country"
           placeholder="United States"
           error={errors.country?.message}
+          disabled={isViewMode}
           {...register("country")}
         />
 
@@ -121,6 +170,7 @@ export function BranchForm({ branch, onSubmit, onCancel, isLoading }: BranchForm
           label="ZIP Code"
           placeholder="10001"
           error={errors.zipCode?.message}
+          disabled={isViewMode}
           {...register("zipCode")}
         />
       </div>
@@ -131,6 +181,7 @@ export function BranchForm({ branch, onSubmit, onCancel, isLoading }: BranchForm
           type="tel"
           placeholder="+1 (555) 123-4567"
           error={errors.phone?.message}
+          disabled={isViewMode}
           {...register("phone")}
         />
 
@@ -139,6 +190,7 @@ export function BranchForm({ branch, onSubmit, onCancel, isLoading }: BranchForm
           type="email"
           placeholder="branch@example.com"
           error={errors.email?.message}
+          disabled={isViewMode}
           {...register("email")}
         />
       </div>
@@ -152,7 +204,8 @@ export function BranchForm({ branch, onSubmit, onCancel, isLoading }: BranchForm
         </label>
         <select
           id="status"
-          className="block w-full rounded-md shadow-sm px-3 py-2 sm:text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          className="block w-full rounded-md shadow-sm px-3 py-2 sm:text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={isViewMode}
           {...register("status")}
         >
           <option value="active">Active</option>
@@ -166,12 +219,23 @@ export function BranchForm({ branch, onSubmit, onCancel, isLoading }: BranchForm
       </div>
 
       <div className="flex justify-end space-x-3">
-        <Button type="button" variant="outline" onClick={onCancel}>
-          Cancel
+        <Button 
+          type="button" 
+          variant="outline" 
+          onClick={onCancel}
+          disabled={isSubmitting || isLoading}
+        >
+          {isViewMode ? "Close" : "Cancel"}
         </Button>
-        <Button type="submit" isLoading={isLoading}>
-          {branch ? "Update Branch" : "Create Branch"}
-        </Button>
+        {!isViewMode && (
+          <Button 
+            type="submit" 
+            isLoading={isSubmitting || isLoading}
+            disabled={isSubmitting || isLoading}
+          >
+            {isEditMode ? "Update Branch" : "Create Branch"}
+          </Button>
+        )}
       </div>
     </form>
   );
