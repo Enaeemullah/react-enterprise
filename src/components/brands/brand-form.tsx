@@ -4,51 +4,50 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
-import { supplierService, CreateSupplierDTO } from "../../services/supplier.service";
+import { branchService, CreateBranchDTO } from "../../services/branch.service";
 import { useGlobal } from "../../contexts/global-context";
+import { useNotifications } from "../../contexts/notification-context";
 
-const supplierSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  contactPerson: z.string().min(2, "Contact person name must be at least 2 characters"),
-  email: z.string().email("Please enter a valid email address"),
-  phone: z.string().min(10, "Phone number must be at least 10 characters"),
+const branchSchema = z.object({
+  name: z.string().min(2, "Branch name must be at least 2 characters"),
+  code: z.string().min(2, "Branch code must be at least 2 characters"),
   address: z.string().min(5, "Address must be at least 5 characters"),
   city: z.string().min(2, "City must be at least 2 characters"),
   state: z.string().min(2, "State must be at least 2 characters"),
-  zipCode: z.string().min(5, "ZIP code must be at least 5 characters"),
   country: z.string().min(2, "Country must be at least 2 characters"),
+  zipCode: z.string().min(5, "ZIP code must be at least 5 characters"),
+  phone: z.string().min(10, "Phone number must be at least 10 characters"),
+  email: z.string().email("Please enter a valid email address"),
   status: z.enum(["active", "inactive"]),
-  paymentTerms: z.string().optional(),
-  taxId: z.string().optional(),
-  notes: z.string().optional(),
 });
 
-type SupplierFormValues = z.infer<typeof supplierSchema>;
+type BranchFormValues = z.infer<typeof branchSchema>;
 
-interface SupplierFormProps {
-  supplier?: SupplierFormValues;
-  onSubmit?: (data: SupplierFormValues) => Promise<void>;
+interface BranchFormProps {
+  branch?: BranchFormValues;
+  onSubmit?: (data: BranchFormValues) => Promise<void>;
   onCancel: () => void;
   onSuccess?: () => void;
   isLoading?: boolean;
 }
 
-export function SupplierForm({ supplier, onSubmit, onCancel, onSuccess, isLoading }: SupplierFormProps) {
+export function BranchForm({ branch, onSubmit, onCancel, onSuccess, isLoading }: BranchFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { showSuccess, showError } = useGlobal();
+  const { notifyCreate, notifyUpdate } = useNotifications();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<SupplierFormValues>({
-    resolver: zodResolver(supplierSchema),
-    defaultValues: supplier || {
+  } = useForm<BranchFormValues>({
+    resolver: zodResolver(branchSchema),
+    defaultValues: branch || {
       status: "active",
     },
   });
 
-  const handleFormSubmit = async (data: SupplierFormValues) => {
+  const handleFormSubmit = async (data: BranchFormValues) => {
     try {
       setIsSubmitting(true);
       
@@ -57,14 +56,16 @@ export function SupplierForm({ supplier, onSubmit, onCancel, onSuccess, isLoadin
         await onSubmit(data);
       } else {
         // Default behavior: call backend service
-        if (supplier?.id) {
-          // Update existing supplier
-          await supplierService.updateSupplier(supplier.id, data);
-          showSuccess("Supplier updated successfully");
+        if (branch?.id) {
+          // Update existing branch
+          await branchService.updateBranch(branch.id, data);
+          showSuccess("Branch updated successfully");
+          notifyUpdate("Branch", data.name, true);
         } else {
-          // Create new supplier
-          await supplierService.createSupplier(data as CreateSupplierDTO);
-          showSuccess("Supplier created successfully");
+          // Create new branch
+          await branchService.createBranch(data as CreateBranchDTO);
+          showSuccess("Branch created successfully");
+          notifyCreate("Branch", data.name, true);
         }
       }
       
@@ -72,9 +73,17 @@ export function SupplierForm({ supplier, onSubmit, onCancel, onSuccess, isLoadin
         onSuccess();
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Failed to save supplier";
+      const errorMessage = err instanceof Error ? err.message : "Failed to save branch";
       showError(errorMessage);
-      console.error("Supplier form submission error:", err);
+      
+      // Notify about the error
+      if (branch?.id) {
+        notifyUpdate("Branch", data.name, false);
+      } else {
+        notifyCreate("Branch", data.name, false);
+      }
+      
+      console.error("Branch form submission error:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -84,35 +93,17 @@ export function SupplierForm({ supplier, onSubmit, onCancel, onSuccess, isLoadin
     <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <Input
-          label="Supplier Name"
-          placeholder="Enter supplier name"
+          label="Branch Name"
+          placeholder="Main Branch"
           error={errors.name?.message}
           {...register("name")}
         />
 
         <Input
-          label="Contact Person"
-          placeholder="Enter contact person name"
-          error={errors.contactPerson?.message}
-          {...register("contactPerson")}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <Input
-          label="Email"
-          type="email"
-          placeholder="supplier@example.com"
-          error={errors.email?.message}
-          {...register("email")}
-        />
-
-        <Input
-          label="Phone"
-          type="tel"
-          placeholder="+1 (555) 123-4567"
-          error={errors.phone?.message}
-          {...register("phone")}
+          label="Branch Code"
+          placeholder="MB001"
+          error={errors.code?.message}
+          {...register("code")}
         />
       </div>
 
@@ -127,7 +118,7 @@ export function SupplierForm({ supplier, onSubmit, onCancel, onSuccess, isLoadin
           id="address"
           className="block w-full rounded-md shadow-sm px-3 py-2 sm:text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
           rows={3}
-          placeholder="Enter supplier address"
+          placeholder="Enter branch address"
           {...register("address")}
         />
         {errors.address?.message && (
@@ -140,64 +131,48 @@ export function SupplierForm({ supplier, onSubmit, onCancel, onSuccess, isLoadin
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <Input
           label="City"
-          placeholder="Enter city"
+          placeholder="New York"
           error={errors.city?.message}
           {...register("city")}
         />
 
         <Input
           label="State"
-          placeholder="Enter state"
+          placeholder="NY"
           error={errors.state?.message}
           {...register("state")}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
-        <Input
-          label="ZIP Code"
-          placeholder="Enter ZIP code"
-          error={errors.zipCode?.message}
-          {...register("zipCode")}
         />
 
         <Input
           label="Country"
-          placeholder="Enter country"
+          placeholder="United States"
           error={errors.country?.message}
           {...register("country")}
+        />
+
+        <Input
+          label="ZIP Code"
+          placeholder="10001"
+          error={errors.zipCode?.message}
+          {...register("zipCode")}
         />
       </div>
 
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <Input
-          label="Payment Terms"
-          placeholder="e.g., Net 30"
-          error={errors.paymentTerms?.message}
-          {...register("paymentTerms")}
+          label="Phone"
+          type="tel"
+          placeholder="+1 (555) 123-4567"
+          error={errors.phone?.message}
+          {...register("phone")}
         />
 
         <Input
-          label="Tax ID"
-          placeholder="Enter tax identification number"
-          error={errors.taxId?.message}
-          {...register("taxId")}
-        />
-      </div>
-
-      <div>
-        <label
-          htmlFor="notes"
-          className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-        >
-          Notes
-        </label>
-        <textarea
-          id="notes"
-          className="block w-full rounded-md shadow-sm px-3 py-2 sm:text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-          rows={3}
-          placeholder="Additional notes about the supplier"
-          {...register("notes")}
+          label="Email"
+          type="email"
+          placeholder="branch@example.com"
+          error={errors.email?.message}
+          {...register("email")}
         />
       </div>
 
@@ -237,7 +212,7 @@ export function SupplierForm({ supplier, onSubmit, onCancel, onSuccess, isLoadin
           isLoading={isSubmitting || isLoading}
           disabled={isSubmitting || isLoading}
         >
-          {supplier ? "Update Supplier" : "Create Supplier"}
+          {branch ? "Update Branch" : "Create Branch"}
         </Button>
       </div>
     </form>

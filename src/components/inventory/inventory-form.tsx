@@ -1,28 +1,28 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Plus, Loader2 } from "lucide-react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { BarcodeGenerator } from "./barcode-generator";
 import { InventoryItem } from "../../contexts/inventory-context";
 import { CreateInventoryItemDTO } from "../../services/inventory.service";
+import { brandService, Brand } from "../../services/brand.service";
+import { categoryService, Category } from "../../services/category.service";
+import { useGlobal } from "../../contexts/global-context";
 import { useTranslation } from "react-i18next";
 
 const inventorySchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   description: z.string().min(5, "Description must be at least 5 characters"),
-  category: z.string().min(2, "Category must be at least 2 characters"),
-  quantity: z.number().min(0, "Quantity must be 0 or greater"),
-  price: z.number().min(0, "Price must be 0 or greater"),
-  status: z.enum(["in-stock", "low-stock", "out-of-stock"]),
+  categoryId: z.number().optional(),
+  stockQuantity: z.number().min(0, "Stock quantity must be 0 or greater"),
+  sellingPrice: z.number().min(0, "Selling price must be 0 or greater"),
+  costPrice: z.number().min(0, "Cost price must be 0 or greater").optional(),
   sku: z.string().min(3, "SKU must be at least 3 characters"),
-  barcode: z.string().optional(),
-  reorderPoint: z.number().min(0, "Reorder point must be 0 or greater"),
-  unit: z.string().min(1, "Unit is required"),
-  supplier: z.string().optional(),
-  location: z.string().optional(),
-  tags: z.array(z.string()).optional(),
+  brandId: z.number().optional(),
+  imageUrl: z.string().url().optional().or(z.literal("")),
 });
 
 type InventoryFormValues = z.infer<typeof inventorySchema>;
@@ -35,10 +35,17 @@ interface InventoryFormProps {
 
 export function InventoryForm({ item, onSubmit, isLoading }: InventoryFormProps) {
   const { t } = useTranslation();
+  const { showError } = useGlobal();
   const isEditMode = !!item;
   const [showBarcodeGenerator, setShowBarcodeGenerator] = useState(false);
   const [showQRGenerator, setShowQRGenerator] = useState(false);
-  const [tags, setTags] = useState<string[]>(item?.tags || []);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Dropdown data states
+  const [brands, setBrands] = useState<Brand[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loadingBrands, setLoadingBrands] = useState(false);
+  const [loadingCategories, setLoadingCategories] = useState(false);
   
   const {
     register,
@@ -51,53 +58,68 @@ export function InventoryForm({ item, onSubmit, isLoading }: InventoryFormProps)
     defaultValues: {
       name: item?.name || "",
       description: item?.description || "",
-      category: item?.category || "",
-      quantity: item?.quantity || 0,
-      price: item?.price || 0,
-      status: item?.status || "in-stock",
+      categoryId: item?.categoryId || undefined,
+      stockQuantity: item?.quantity || item?.stockQuantity || 0,
+      sellingPrice: item?.price || item?.sellingPrice || 0,
+      costPrice: item?.costPrice || 0,
       sku: item?.sku || "",
-      barcode: item?.barcode || "",
-      reorderPoint: item?.reorderPoint || 5,
-      unit: item?.unit || "pieces",
-      supplier: item?.supplier || "",
-      location: item?.location || "",
-      tags: item?.tags || [],
+      brandId: item?.brandId || undefined,
+      imageUrl: item?.imageUrl || "",
     },
   });
 
-  const quantity = watch("quantity");
-  const reorderPoint = watch("reorderPoint");
   const sku = watch("sku");
 
-  // Automatically update status based on quantity and reorder point
-  const calculateStatus = (qty: number, reorderPt: number): "in-stock" | "low-stock" | "out-of-stock" => {
-    if (qty <= 0) return "out-of-stock";
-    if (qty <= reorderPt) return "low-stock";
-    return "in-stock";
-  };
+  // Fetch brands and categories on component mount
+  useEffect(() => {
+    const fetchDropdownData = async () => {
+      // Fetch brands
+      try {
+        setLoadingBrands(true);
+        const brandsData = await brandService.getBrands();
+        setBrands(brandsData.filter(brand => brand.status === 'active'));
+      } catch (error) {
+        console.error('Failed to fetch brands:', error);
+        showError('Failed to load brands');
+      } finally {
+        setLoadingBrands(false);
+      }
+
+      // Fetch categories
+      try {
+        setLoadingCategories(true);
+        const categoriesData = await categoryService.getCategories();
+        setCategories(categoriesData.filter(category => category.status === 'active'));
+      } catch (error) {
+        console.error('Failed to fetch categories:', error);
+        showError('Failed to load categories');
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    fetchDropdownData();
+  }, [showError]);
 
   const handleFormSubmit = async (data: InventoryFormValues) => {
-    const status = calculateStatus(data.quantity, data.reorderPoint);
-    await onSubmit({ ...data, status, tags });
-  };
-
-  const handleTagAdd = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === 'Enter' && event.currentTarget.value) {
-      event.preventDefault();
-      const newTag = event.currentTarget.value.trim();
-      if (newTag && !tags.includes(newTag)) {
-        const updatedTags = [...tags, newTag];
-        setTags(updatedTags);
-        setValue('tags', updatedTags);
-        event.currentTarget.value = '';
-      }
+    try {
+      setIsSubmitting(true);
+      await onSubmit(data as CreateInventoryItemDTO);
+    } catch (error) {
+      console.error('Form submission error:', error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handleTagRemove = (tagToRemove: string) => {
-    const updatedTags = tags.filter(tag => tag !== tagToRemove);
-    setTags(updatedTags);
-    setValue('tags', updatedTags);
+  const handleAddNewBrand = () => {
+    // Navigate to add brand page or open modal
+    window.open('/dashboard/inventory/brands', '_blank');
+  };
+
+  const handleAddNewCategory = () => {
+    // Navigate to add category page or open modal
+    window.open('/dashboard/inventory/categories', '_blank');
   };
 
   return (
@@ -105,20 +127,20 @@ export function InventoryForm({ item, onSubmit, isLoading }: InventoryFormProps)
       {/* Basic Information */}
       <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6 space-y-6">
         <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-          {t("inventory.basicInfo")}
+          Basic Information
         </h3>
         
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <Input
-            label={t("inventory.name")}
-            placeholder={t("inventory.namePlaceholder")}
+            label="Product Name"
+            placeholder="Enter product name"
             error={errors.name?.message}
             {...register("name")}
           />
           
           <Input
-            label={t("inventory.sku")}
-            placeholder={t("inventory.skuPlaceholder")}
+            label="SKU"
+            placeholder="Enter SKU"
             error={errors.sku?.message}
             rightElement={
               <div className="flex space-x-2">
@@ -128,7 +150,7 @@ export function InventoryForm({ item, onSubmit, isLoading }: InventoryFormProps)
                   size="sm"
                   onClick={() => setShowBarcodeGenerator(true)}
                 >
-                  {t("inventory.generateBarcode")}
+                  Barcode
                 </Button>
                 <Button
                   type="button"
@@ -136,7 +158,7 @@ export function InventoryForm({ item, onSubmit, isLoading }: InventoryFormProps)
                   size="sm"
                   onClick={() => setShowQRGenerator(true)}
                 >
-                  {t("inventory.generateQR")}
+                  QR Code
                 </Button>
               </div>
             }
@@ -149,13 +171,13 @@ export function InventoryForm({ item, onSubmit, isLoading }: InventoryFormProps)
             htmlFor="description"
             className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
           >
-            {t("inventory.description")}
+            Description
           </label>
           <textarea
             id="description"
             className="block w-full rounded-md shadow-sm px-3 py-2 sm:text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             rows={3}
-            placeholder={t("inventory.descriptionPlaceholder")}
+            placeholder="Enter product description"
             {...register("description")}
           />
           {errors.description?.message && (
@@ -164,133 +186,166 @@ export function InventoryForm({ item, onSubmit, isLoading }: InventoryFormProps)
             </p>
           )}
         </div>
+
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          {/* Brand Dropdown */}
+          <div>
+            <label
+              htmlFor="brandId"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Brand
+            </label>
+            <div className="flex space-x-2">
+              <div className="flex-1 relative">
+                <select
+                  id="brandId"
+                  className="block w-full rounded-md shadow-sm px-3 py-2 sm:text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  {...register("brandId", { 
+                    setValueAs: (value) => value === "" ? undefined : parseInt(value, 10)
+                  })}
+                  disabled={loadingBrands}
+                >
+                  <option value="">
+                    {loadingBrands ? "Loading brands..." : "Select a brand"}
+                  </option>
+                  {brands.map((brand) => (
+                    <option key={brand.id} value={brand.id}>
+                      {brand.name}
+                    </option>
+                  ))}
+                </select>
+                {loadingBrands && (
+                  <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
+                    <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                  </div>
+                )}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddNewBrand}
+                className="flex items-center px-3"
+                title="Add new brand"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            {errors.brand?.message && (
+              <p className="mt-1 text-sm text-error-600 dark:text-error-400">
+                {errors.brand.message}
+              </p>
+            )}
+          </div>
+          
+          {/* Category Dropdown */}
+          <div>
+            <label
+              htmlFor="categoryId"
+              className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
+            >
+              Category
+            </label>
+            <div className="flex space-x-2">
+              <div className="flex-1 relative">
+                <select
+                  id="categoryId"
+                  className="block w-full rounded-md shadow-sm px-3 py-2 sm:text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+                  {...register("categoryId", { 
+                    setValueAs: (value) => value === "" ? undefined : parseInt(value, 10)
+                  })}
+                  disabled={loadingCategories}
+                >
+                  <option value="">
+                    {loadingCategories ? "Loading categories..." : "Select a category"}
+                  </option>
+                  {categories.map((category) => (
+                    <option key={category.id} value={category.id}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+                {loadingCategories && (
+                  <div className="absolute right-8 top-1/2 transform -translate-y-1/2">
+                    <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
+                  </div>
+                )}
+              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddNewCategory}
+                className="flex items-center px-3"
+                title="Add new category"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
+            {errors.categoryId?.message && (
+              <p className="mt-1 text-sm text-error-600 dark:text-error-400">
+                {errors.categoryId.message}
+              </p>
+            )}
+          </div>
+        </div>
       </div>
 
-      {/* Stock Information */}
+      {/* Pricing & Stock Information */}
       <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6 space-y-6">
         <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-          {t("inventory.stockInfo")}
+          Pricing & Stock
         </h3>
         
         <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
           <Input
             type="number"
-            label={t("inventory.quantity")}
+            label="Stock Quantity"
             min={0}
-            error={errors.quantity?.message}
-            {...register("quantity", { valueAsNumber: true })}
+            error={errors.stockQuantity?.message}
+            {...register("stockQuantity", { valueAsNumber: true })}
           />
           
           <Input
             type="number"
-            label={t("inventory.price")}
+            label="Selling Price ($)"
             min={0}
             step={0.01}
-            error={errors.price?.message}
-            {...register("price", { valueAsNumber: true })}
+            error={errors.sellingPrice?.message}
+            {...register("sellingPrice", { valueAsNumber: true })}
           />
           
           <Input
             type="number"
-            label={t("inventory.reorderPoint")}
+            label="Cost Price ($)"
             min={0}
-            error={errors.reorderPoint?.message}
-            {...register("reorderPoint", { valueAsNumber: true })}
+            step={0.01}
+            error={errors.costPrice?.message}
+            {...register("costPrice", { valueAsNumber: true })}
           />
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <Input
-            label={t("inventory.unit")}
-            placeholder={t("inventory.unitPlaceholder")}
-            error={errors.unit?.message}
-            {...register("unit")}
-          />
-          
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              {t("inventory.status")}
-            </label>
-            <div className="mt-1 p-3 bg-white dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
-              <p className="text-sm text-gray-600 dark:text-gray-400">
-                {t("inventory.statusAutomatic")}
-              </p>
-              <div className="mt-2 font-medium">
-                {t("inventory.currentStatus")}:{" "}
-                <span className={`
-                  ${calculateStatus(quantity, reorderPoint) === "in-stock" && "text-success-600 dark:text-success-400"}
-                  ${calculateStatus(quantity, reorderPoint) === "low-stock" && "text-warning-600 dark:text-warning-400"}
-                  ${calculateStatus(quantity, reorderPoint) === "out-of-stock" && "text-error-600 dark:text-error-400"}
-                `}>
-                  {t(`inventory.status${calculateStatus(quantity, reorderPoint)}`)}
-                </span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
 
       {/* Additional Information */}
       <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-6 space-y-6">
         <h3 className="text-lg font-medium text-gray-900 dark:text-white">
-          {t("inventory.additionalInfo")}
+          Additional Information
         </h3>
         
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          <Input
-            label={t("inventory.category")}
-            placeholder={t("inventory.categoryPlaceholder")}
-            error={errors.category?.message}
-            {...register("category")}
-          />
-          
-          <Input
-            label={t("inventory.supplier")}
-            placeholder={t("inventory.supplierPlaceholder")}
-            error={errors.supplier?.message}
-            {...register("supplier")}
-          />
-        </div>
-
         <Input
-          label={t("inventory.location")}
-          placeholder={t("inventory.locationPlaceholder")}
-          error={errors.location?.message}
-          {...register("location")}
+          label="Image URL"
+          type="url"
+          placeholder="https://example.com/image.jpg"
+          error={errors.imageUrl?.message}
+          {...register("imageUrl")}
         />
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-            {t("inventory.tags")}
-          </label>
-          <div className="flex flex-wrap gap-2 mb-2">
-            {tags.map((tag, index) => (
-              <span
-                key={index}
-                className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary-100 text-primary-800 dark:bg-primary-900/30 dark:text-primary-400"
-              >
-                {tag}
-                <button
-                  type="button"
-                  onClick={() => handleTagRemove(tag)}
-                  className="ml-1 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300"
-                >
-                  ×
-                </button>
-              </span>
-            ))}
-          </div>
-          <Input
-            placeholder={t("inventory.tagsPlaceholder")}
-            onKeyDown={handleTagAdd}
-          />
-        </div>
       </div>
 
       {/* Barcode/QR Code Generators */}
       {showBarcodeGenerator && (
         <div className="mt-4 p-4 border rounded-lg">
-          <h3 className="text-lg font-medium mb-4">{t("inventory.barcodeGenerator")}</h3>
+          <h3 className="text-lg font-medium mb-4">Barcode Generator</h3>
           <BarcodeGenerator value={sku} type="barcode" />
           <Button
             type="button"
@@ -298,14 +353,14 @@ export function InventoryForm({ item, onSubmit, isLoading }: InventoryFormProps)
             className="mt-4"
             onClick={() => setShowBarcodeGenerator(false)}
           >
-            {t("common.close")}
+            Close
           </Button>
         </div>
       )}
 
       {showQRGenerator && (
         <div className="mt-4 p-4 border rounded-lg">
-          <h3 className="text-lg font-medium mb-4">{t("inventory.qrGenerator")}</h3>
+          <h3 className="text-lg font-medium mb-4">QR Code Generator</h3>
           <BarcodeGenerator value={sku} type="qrcode" />
           <Button
             type="button"
@@ -313,7 +368,7 @@ export function InventoryForm({ item, onSubmit, isLoading }: InventoryFormProps)
             className="mt-4"
             onClick={() => setShowQRGenerator(false)}
           >
-            {t("common.close")}
+            Close
           </Button>
         </div>
       )}
@@ -324,11 +379,16 @@ export function InventoryForm({ item, onSubmit, isLoading }: InventoryFormProps)
           type="button"
           variant="outline"
           onClick={() => window.history.back()}
+          disabled={isSubmitting}
         >
-          {t("common.cancel")}
+          Cancel
         </Button>
-        <Button type="submit" isLoading={isLoading}>
-          {isEditMode ? t("inventory.updateItem") : t("inventory.addItem")}
+        <Button 
+          type="submit" 
+          isLoading={isSubmitting || isLoading}
+          disabled={isSubmitting || isLoading}
+        >
+          {isEditMode ? "Update Item" : "Add Item"}
         </Button>
       </div>
     </form>

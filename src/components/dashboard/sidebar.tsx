@@ -4,7 +4,8 @@ import {
   Package, Users, Home, ShoppingCart, BarChart3, 
   Layers, ChevronRight, X, Building2, Shield, Store,
   Boxes, Activity,
-  Flower2
+  Flower2,
+  UserCog
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { useAuth } from "../../contexts/auth-context";
@@ -22,16 +23,17 @@ const navigation = [
     children: [
       { name: "All Items", href: "/dashboard/inventory" },
       { name: "Add Item", href: "/dashboard/inventory/add" },
-      { name: "Transfer", href: "/dashboard/inventory/transfer" },
-      { name: "Branches", href: "/dashboard/inventory/branches" },
+      { name: "Bulk Upload", href: "/dashboard/inventory/bulk-upload"},
+      { name: "Transfer", href: "/dashboard/inventory/transfer"},
+      { name: "Branches", href: "/dashboard/inventory/branches"},
+      { name: "Brands", href: "/dashboard/inventory/brands"},
       { name: "Suppliers", href: "/dashboard/inventory/suppliers" },
+      { name: "Categories", href: "/dashboard/inventory/categories"},
     ],
   },
   { name: "Point of Sale", href: "/dashboard/pos", icon: Store },
   { name: "Services", href: "/dashboard/services", icon: ShoppingCart },
   { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },
-  { name: "Customers", href: "/dashboard/customers", icon: Users },
-  { name: "Projects", href: "/dashboard/projects", icon: Layers },
   { 
     name: "Security", 
     icon: Shield,
@@ -40,6 +42,15 @@ const navigation = [
       { name: "Permissions", href: "/dashboard/permissions" },
       { name: "Modules", href: "/dashboard/modules" },
       { name: "Actions", href: "/dashboard/actions" },
+    ],
+  },
+  {
+    name: "User Management",
+    icon: UserCog,
+    children: [
+      { name: "All Users", href: "/dashboard/users" },
+      { name: "Add User", href: "/dashboard/users/add" },
+      { name: "User Groups", href: "/dashboard/users/groups" },
     ],
   },
 ];

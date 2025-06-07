@@ -106,27 +106,12 @@ export function SignupForm() {
           {...register("orga_code")}
         />
         
-        <div>
-          <label
-            htmlFor="orga_desc"
-            className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1"
-          >
-            Organization Description
-          </label>
-          <textarea
-            id="orga_desc"
-            className="block w-full rounded-md shadow-sm px-3 py-2 sm:text-sm border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
-            rows={3}
+         <Input
+            label="Organization Description"
             placeholder="Describe your organization"
-            {...register("orga_desc")}
-          />
-          {errors.orga_desc?.message && (
-            <p className="mt-1 text-sm text-error-600 dark:text-error-400">
-              {errors.orga_desc.message}
-            </p>
-          )}
-        </div>
-        
+            error={errors.orga_desc?.message}
+             {...register("orga_desc")}
+          /> 
         <Input
           label="Email"
           type="email"

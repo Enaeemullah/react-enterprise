@@ -37,15 +37,20 @@ import { CustomerServicesPage } from "./pages/dashboard/customers/services";
 import { NotFoundPage } from "./pages/not-found";
 import { SocketProvider } from "./contexts/socket-context";
 import { ReportsPage } from "./pages/dashboard/reports";
+import { UserAddPage } from "./pages/users/add";
+import { BrandListPage } from "./pages/dashboard/inventory/brands";
+import { CategoryListPage } from "./pages/dashboard/inventory/categories";
+import { NotificationProvider } from "./contexts/notification-context";
 
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <GlobalProvider>
+           <NotificationProvider>
           <ProfileProvider>
             <InventoryProvider>
-               <SocketProvider>
+               {/* <SocketProvider> */}
               <Router>
                 <Routes>
                   {/* Redirect root to signup */}
@@ -67,13 +72,16 @@ function App() {
                     <Route path="pos" element={<POSPage />} />
                     
                     {/* Inventory routes */}
-                    <Route path="inventory" element={<InventoryListPage />} />
-                    <Route path="inventory/add" element={<InventoryAddPage />} />
-                    <Route path="inventory/:id" element={<InventoryDetailPage />} />
-                    <Route path="inventory/:id/edit" element={<InventoryEditPage />} />
-                    <Route path="inventory/transfer" element={<InventoryTransferPage />} />
-                    <Route path="inventory/branches" element={<BranchListPage />} />
-                    <Route path="inventory/suppliers" element={<SupplierListPage />} />
+                      <Route path="inventory" element={<InventoryListPage />} />
+                      <Route path="inventory/add" element={<InventoryAddPage />} />
+                      <Route path="inventory/:id" element={<InventoryDetailPage />} />
+                      <Route path="inventory/:id/edit" element={<InventoryEditPage />} />
+                      <Route path="inventory/transfer" element={<InventoryTransferPage />} />
+                      <Route path="inventory/bulk-upload" element={<InventoryListPage />} />
+                      <Route path="inventory/branches" element={<BranchListPage />} />
+                      <Route path="inventory/suppliers" element={<SupplierListPage />} />
+                      <Route path="inventory/brands" element={<BrandListPage />} />
+                      <Route path="inventory/categories" element={<CategoryListPage />} />
                     
                     {/* Customer routes */}
                     <Route path="customers" element={<CustomersPage />} />
@@ -88,9 +96,9 @@ function App() {
                     {/* Other routes */}
                     <Route path="profile" element={<ProfilePage />} />
                     <Route path="settings" element={<SettingsPage />} />
-                    
-                    {/* Services placeholder */}
-                    <Route path="services" element={<div className="p-4">Services page (Coming soon)</div>} />
+
+                    {/* User routes */}
+                      <Route path="users/add" element={<UserAddPage />} />
                     
                     {/* Reports placeholder */}
                     <Route path="reports" element={<ReportsPage />} />
@@ -106,9 +114,10 @@ function App() {
                 richColors
                 closeButton
               />
-              </SocketProvider>
+              {/* </SocketProvider> */}
             </InventoryProvider>
           </ProfileProvider>
+          </NotificationProvider>
         </GlobalProvider>
       </AuthProvider>
     </ThemeProvider>

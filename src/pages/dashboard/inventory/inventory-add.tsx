@@ -3,14 +3,29 @@ import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { InventoryForm } from "../../../components/inventory/inventory-form";
 import { useInventory } from "../../../contexts/inventory-context";
+import { inventoryService } from "../../../services/inventory.service";
+import { useGlobal } from "../../../contexts/global-context";
+import type { CreateInventoryItemDTO } from "../../../services/inventory.service";
 
 export function InventoryAddPage() {
   const navigate = useNavigate();
-  const { addItem, isLoading } = useInventory();
+  const { showSuccess, showError, setIsLoading } = useGlobal();
+  const { addItem } = useInventory();
 
-  const handleSubmit = async (data: any) => {
-    await addItem(data);
-    navigate("/dashboard/inventory");
+  const handleSubmit = async (data: CreateInventoryItemDTO) => {
+    try {
+      setIsLoading(true);
+      // First save to backend
+      await inventoryService.createItem(data);
+      // Then update local state
+      await addItem(data);
+      showSuccess("Inventory item created successfully");
+      navigate("/dashboard/inventory");
+    } catch (error) {
+      showError("Failed to create inventory item");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -24,7 +39,7 @@ export function InventoryAddPage() {
           <CardTitle>Item Details</CardTitle>
         </CardHeader>
         <CardContent>
-          <InventoryForm onSubmit={handleSubmit} isLoading={isLoading} />
+          <InventoryForm onSubmit={handleSubmit} isLoading={false} />
         </CardContent>
       </Card>
     </div>

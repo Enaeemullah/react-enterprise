@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Edit, Trash2, Eye, Search } from "lucide-react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { InventoryItem, useInventory } from "../../contexts/inventory-context";
 import { Button } from "../ui/button";
 import { formatDate } from "../../lib/utils";
@@ -17,6 +17,7 @@ export function InventoryTable({
   onDeleteItem,
 }: InventoryTableProps) {
   const { items } = useInventory();
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState<keyof InventoryItem>("name");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
@@ -33,7 +34,8 @@ export function InventoryTable({
   const filteredItems = items.filter((item) =>
     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.category.toLowerCase().includes(searchTerm.toLowerCase())
+    item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    item.sku.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const sortedItems = [...filteredItems].sort((a, b) => {
@@ -63,6 +65,34 @@ export function InventoryTable({
         return "bg-error-100 text-error-800 dark:bg-error-900/30 dark:text-error-400";
       default:
         return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300";
+    }
+  };
+
+  const handleView = (item: InventoryItem) => {
+    if (onViewItem) {
+      onViewItem(item);
+    } else {
+      navigate(`/dashboard/inventory/${item.id}`);
+    }
+  };
+
+  const handleEdit = (item: InventoryItem) => {
+    if (onEditItem) {
+      onEditItem(item);
+    } else {
+      navigate(`/dashboard/inventory/${item.id}/edit`);
+    }
+  };
+
+  const handleDelete = (item: InventoryItem) => {
+    if (onDeleteItem) {
+      onDeleteItem(item);
+    } else {
+      // Default delete confirmation
+      if (confirm(`Are you sure you want to delete "${item.name}"?`)) {
+        // This would typically call a delete service
+        console.log("Delete item:", item.id);
+      }
     }
   };
 
@@ -97,7 +127,7 @@ export function InventoryTable({
                 onClick={() => handleSort("name")}
               >
                 <div className="flex items-center">
-                  Name
+                  Product
                   {sortField === "name" && (
                     <span className="ml-1">
                       {sortDirection === "asc" ? "↑" : "↓"}
@@ -125,7 +155,7 @@ export function InventoryTable({
                 onClick={() => handleSort("quantity")}
               >
                 <div className="flex items-center">
-                  Quantity
+                  Stock
                   {sortField === "quantity" && (
                     <span className="ml-1">
                       {sortDirection === "asc" ? "↑" : "↓"}
@@ -161,20 +191,6 @@ export function InventoryTable({
                   )}
                 </div>
               </th>
-              <th
-                scope="col"
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer"
-                onClick={() => handleSort("lastUpdated")}
-              >
-                <div className="flex items-center">
-                  Last Updated
-                  {sortField === "lastUpdated" && (
-                    <span className="ml-1">
-                      {sortDirection === "asc" ? "↑" : "↓"}
-                    </span>
-                  )}
-                </div>
-              </th>
               <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Actions
               </th>
@@ -183,13 +199,34 @@ export function InventoryTable({
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
             {sortedItems.length > 0 ? (
               sortedItems.map((item) => (
-                <tr key={item.id}>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900 dark:text-white">
-                      {item.name}
-                    </div>
-                    <div className="text-sm text-gray-500 dark:text-gray-400 truncate max-w-xs">
-                      {item.description}
+                <tr key={item.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center">
+                      {item.imageUrl && (
+                        <div className="flex-shrink-0 h-10 w-10">
+                          <img
+                            className="h-10 w-10 rounded-lg object-cover"
+                            src={item.imageUrl}
+                            alt={item.name}
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </div>
+                      )}
+                      <div className={item.imageUrl ? "ml-4" : ""}>
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
+                          {item.name}
+                        </div>
+                        <div className="text-sm text-gray-500 dark:text-gray-400">
+                          SKU: {item.sku}
+                        </div>
+                        {item.brand && (
+                          <div className="text-xs text-gray-400 dark:text-gray-500">
+                            {item.brand}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
@@ -200,8 +237,15 @@ export function InventoryTable({
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                     {item.quantity}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                    ${item.price.toFixed(2)}
+                  <td className="px-6 py-4 whitespace-nowrap">
+                    <div className="text-sm text-gray-900 dark:text-white">
+                      ${item.price !== undefined ? item.price.toFixed(2) : 'N/A'}
+                    </div>
+                    {item.costPrice && (
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        Cost: ${item.costPrice.toFixed(2)}
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span
@@ -215,32 +259,32 @@ export function InventoryTable({
                         .join(" ")}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                    {formatDate(new Date(item.lastUpdated))}
-                  </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <div className="flex justify-end space-x-2">
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onViewItem?.(item)}
+                        onClick={() => handleView(item)}
                         className="text-primary-600 hover:text-primary-900 dark:text-primary-400 dark:hover:text-primary-300"
+                        title="View details"
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onEditItem?.(item)}
+                        onClick={() => handleEdit(item)}
                         className="text-secondary-600 hover:text-secondary-900 dark:text-secondary-400 dark:hover:text-secondary-300"
+                        title="Edit item"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => onDeleteItem?.(item)}
+                        onClick={() => handleDelete(item)}
                         className="text-error-600 hover:text-error-900 dark:text-error-400 dark:hover:text-error-300"
+                        title="Delete item"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -251,7 +295,7 @@ export function InventoryTable({
             ) : (
               <tr>
                 <td
-                  colSpan={7}
+                  colSpan={6}
                   className="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400"
                 >
                   No items found. {searchTerm && "Try adjusting your search."}

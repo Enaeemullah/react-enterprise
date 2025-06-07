@@ -34,10 +34,10 @@ export const API_ENDPOINTS = {
     changePassword: '/auth/change-password'
   },
   inventory: {
-    list: '/inventory',
-    create: '/inventory',
-    update: '/inventory/:id',
-    delete: '/inventory/:id',
+    list: '/inventory/items',
+    create: '/inventory/create',
+    update: '/inventory/:id/edit',
+    delete: '/inventory/:id/delete',
     detail: '/inventory/:id',
   },
   branches: {
@@ -47,11 +47,25 @@ export const API_ENDPOINTS = {
     delete: '/branches/:id',
     detail: '/branches/:id',
   },
+  brands: {
+    list: '/brands',
+    create: '/brands/create',
+    update: '/brands/:id/edit',
+    delete: '/brands/:id/delete',
+    detail: '/brands/:id',
+  },
+    categories: {
+    list: '/categories',
+    create: '/categories/create',
+    update: '/categories/:id',
+    delete: '/categories/:id',
+    detail: '/categories/:id',
+  },
   suppliers: {
     list: '/suppliers',
-    create: '/suppliers',
-    update: '/suppliers/:id',
-    delete: '/suppliers/:id',
+    create: '/suppliers/create',
+    update: '/suppliers/:id/edit',
+    delete: '/suppliers/:id/delete',
     detail: '/suppliers/:id',
   },
   customers: {

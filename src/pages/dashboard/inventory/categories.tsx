@@ -2,51 +2,51 @@ import React, { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
-import { SupplierForm } from "../../../components/suppliers/supplier-form";
-import { SupplierList } from "../../../components/suppliers/supplier-list";
-import { supplierService, Supplier } from "../../../services/supplier.service";
+import { CategoryForm } from "../../../components/categories/category-form";
+import { CategoryList } from "../../../components/categories/category-list";
 import { useGlobal } from "../../../contexts/global-context";
+import { Category, categoryService } from "../../../services/category.service";
 
-export function SupplierListPage() {
+export function CategoryListPage() {
   const [showForm, setShowForm] = useState(false);
-  const [editingSupplier, setEditingSupplier] = useState<Supplier | null>(null);
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { showSuccess, showError } = useGlobal();
 
-  // Fetch suppliers on component mount
+  // Fetch categories on component mount
   useEffect(() => {
-    fetchSuppliers();
+    fetchCategories();
   }, []);
 
-  const fetchSuppliers = async () => {
+  const fetchCategories = async () => {
     try {
       setIsLoading(true);
-      const data = await supplierService.getSuppliers();
-      setSuppliers(data);
+      const data = await categoryService.getCategories();
+      setCategories(data);
     } catch (error) {
-      showError("Failed to fetch suppliers");
-      console.error("Error fetching suppliers:", error);
+      showError("Failed to fetch categories");
+      console.error("Error fetching categories:", error);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleEdit = (supplier: Supplier) => {
-    setEditingSupplier(supplier);
+  const handleEdit = (category: Category) => {
+    setEditingCategory(category);
     setShowForm(true);
   };
 
-  const handleDelete = async (supplier: Supplier) => {
-    if (confirm(`Are you sure you want to delete "${supplier.name}"?`)) {
+  const handleDelete = async (category: Category) => {
+    if (confirm(`Are you sure you want to delete "${category.name}"?`)) {
       try {
         setIsLoading(true);
-        await supplierService.deleteSupplier(supplier.id);
-        showSuccess("Supplier deleted successfully");
-        await fetchSuppliers(); // Refresh the list
+        await categoryService.deleteCategory(category.id);
+        showSuccess("Category deleted successfully");
+        await fetchCategories(); // Refresh the list
       } catch (error) {
-        showError("Failed to delete supplier");
-        console.error("Error deleting supplier:", error);
+        showError("Failed to delete category");
+        console.error("Error deleting category:", error);
       } finally {
         setIsLoading(false);
       }
@@ -55,12 +55,12 @@ export function SupplierListPage() {
 
   const handleClose = () => {
     setShowForm(false);
-    setEditingSupplier(null);
+    setEditingCategory(null);
   };
 
   const handleSuccess = async () => {
     handleClose();
-    await fetchSuppliers(); // Refresh the list after successful save
+    await fetchCategories(); // Refresh the list after successful save
   };
 
   return (
@@ -68,10 +68,10 @@ export function SupplierListPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Suppliers
+            Categories
           </h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Manage your inventory suppliers and vendors
+            Manage product categories and classifications
           </p>
         </div>
         <Button 
@@ -80,7 +80,7 @@ export function SupplierListPage() {
           disabled={isLoading}
         >
           <Plus className="h-4 w-4 mr-2" />
-          Add Supplier
+          Add Category
         </Button>
       </div>
 
@@ -88,12 +88,12 @@ export function SupplierListPage() {
         <Card>
           <CardHeader>
             <CardTitle>
-              {editingSupplier ? "Edit Supplier" : "Add New Supplier"}
+              {editingCategory ? "Edit Category" : "Add New Category"}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <SupplierForm
-              supplier={editingSupplier ?? undefined}
+            <CategoryForm
+              category={editingCategory ?? undefined}
               onCancel={handleClose}
               onSuccess={handleSuccess}
               isLoading={isLoading}
@@ -101,8 +101,8 @@ export function SupplierListPage() {
           </CardContent>
         </Card>
       ) : (
-        <SupplierList 
-          suppliers={suppliers}
+        <CategoryList 
+          categories={categories}
           onEdit={handleEdit} 
           onDelete={handleDelete}
           isLoading={isLoading}

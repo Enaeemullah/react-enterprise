@@ -6,16 +6,23 @@ export interface InventoryItem {
   name: string;
   description: string;
   category: string;
+  categoryId?: number;
+  categoryTitle?: string;
   quantity: number;
+  stockQuantity?: number;
   price: number;
+  sellingPrice?: number;
+  costPrice?: number;
   status: "in-stock" | "low-stock" | "out-of-stock";
   sku: string;
+  brandId?: number;
   barcode?: string;
   reorderPoint: number;
   unit: string;
   supplier?: string;
   location?: string;
   tags?: string[];
+  imageUrl?: string;
   lastUpdated: string;
 }
 
@@ -26,64 +33,73 @@ interface InventoryContextType {
   addItem: (item: Omit<InventoryItem, "id" | "lastUpdated">) => Promise<void>;
   updateItem: (id: string, item: Partial<InventoryItem>) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
+  setItems: (items: InventoryItem[]) => void;
 }
 
 const InventoryContext = createContext<InventoryContextType | undefined>(undefined);
 
-// Mock inventory data
-const MOCK_INVENTORY: InventoryItem[] = [
-  {
-    id: "inv-1",
-    name: "Laptop - XPS 15",
-    description: "Dell XPS 15 with 16GB RAM and 512GB SSD",
-    category: "Electronics",
-    quantity: 25,
-    price: 1299.99,
-    status: "in-stock",
-    sku: "LAP-XPS15",
-    barcode: "123456789",
-    reorderPoint: 5,
-    unit: "pieces",
-    supplier: "Dell Inc.",
-    location: "Warehouse A",
-    tags: ["laptop", "dell", "electronics"],
-    lastUpdated: new Date().toISOString(),
-  },
-  {
-    id: "inv-2",
-    name: "Office Chair",
-    description: "Ergonomic office chair with lumbar support",
-    category: "Furniture",
-    quantity: 12,
-    price: 249.99,
-    status: "in-stock",
-    sku: "FUR-CHAIR1",
-    reorderPoint: 3,
-    unit: "pieces",
-    supplier: "Office Furniture Co.",
-    location: "Warehouse B",
-    lastUpdated: new Date().toISOString(),
-  },
-  {
-    id: "inv-3",
-    name: "Wireless Mouse",
-    description: "Bluetooth wireless mouse",
-    category: "Accessories",
-    quantity: 5,
-    price: 39.99,
-    status: "low-stock",
-    sku: "ACC-MOUSE1",
-    reorderPoint: 10,
-    unit: "pieces",
-    supplier: "Logitech",
-    location: "Shelf C-12",
-    lastUpdated: new Date().toISOString(),
-  },
-];
+// Transform backend response to frontend format
+export const transformBackendItem = (backendItem: any): InventoryItem => {
+  const quantity = backendItem.stockQuantity || backendItem.quantity || 0;
+  const reorderPoint = backendItem.reorderPoint || 5;
+  
+  // Calculate status based on quantity
+  let status: "in-stock" | "low-stock" | "out-of-stock" = "in-stock";
+  if (quantity <= 0) {
+    status = "out-of-stock";
+  } else if (quantity <= reorderPoint) {
+    status = "low-stock";
+  }
+
+  return {
+    id: backendItem.id?.toString() || generateId(),
+    name: backendItem.name || "",
+    description: backendItem.description || "",
+    category: backendItem.categoryTitle || backendItem.category || "Uncategorized",
+    categoryId: backendItem.categoryId,
+    categoryTitle: backendItem.categoryTitle,
+    quantity: quantity,
+    stockQuantity: backendItem.stockQuantity,
+    price: backendItem.sellingPrice || backendItem.price || 0,
+    sellingPrice: backendItem.sellingPrice,
+    costPrice: backendItem.costPrice,
+    status: status,
+    sku: backendItem.sku || "",
+    brandId: backendItem.brandId,
+    barcode: backendItem.barcode,
+    reorderPoint: reorderPoint,
+    unit: backendItem.unit || "pieces",
+    supplier: backendItem.supplier,
+    location: backendItem.location,
+    tags: backendItem.tags || [],
+    imageUrl: backendItem.imageUrl,
+    lastUpdated: backendItem.updatedAt || backendItem.lastUpdated || new Date().toISOString(),
+  };
+};
+
+// Transform frontend item to backend format
+export const transformFrontendItem = (frontendItem: Partial<InventoryItem>) => {
+  return {
+    name: frontendItem.name,
+    description: frontendItem.description,
+    categoryId: frontendItem.categoryId,
+    stockQuantity: frontendItem.quantity || frontendItem.stockQuantity,
+    sellingPrice: frontendItem.price || frontendItem.sellingPrice,
+    costPrice: frontendItem.costPrice,
+    sku: frontendItem.sku,
+    brandId: frontendItem.brandId,
+    imageUrl: frontendItem.imageUrl,
+    // Add other fields as needed by your backend
+  };
+};
 
 export function InventoryProvider({ children }: { children: React.ReactNode }) {
-  const [items, setItems] = useState<InventoryItem[]>(MOCK_INVENTORY);
+  const [items, setItemsState] = useState<InventoryItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const setItems = (newItems: InventoryItem[]) => {
+    setItemsState(newItems);
+  };
 
   const getItem = (id: string) => {
     return items.find((item) => item.id === id);
@@ -104,7 +120,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         lastUpdated: new Date().toISOString(),
       };
       
-      setItems((prevItems) => [...prevItems, newItem]);
+      setItemsState((prevItems) => [...prevItems, newItem]);
     } finally {
       setIsLoading(false);
     }
@@ -117,7 +133,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       // Simulate API call delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
       
-      setItems((prevItems) =>
+      setItemsState((prevItems) =>
         prevItems.map((item) =>
           item.id === id
             ? {
@@ -140,7 +156,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
       // Simulate API call delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
       
-      setItems((prevItems) => prevItems.filter((item) => item.id !== id));
+      setItemsState((prevItems) => prevItems.filter((item) => item.id !== id));
     } finally {
       setIsLoading(false);
     }
@@ -155,6 +171,7 @@ export function InventoryProvider({ children }: { children: React.ReactNode }) {
         addItem,
         updateItem,
         deleteItem,
+        setItems,
       }}
     >
       {children}

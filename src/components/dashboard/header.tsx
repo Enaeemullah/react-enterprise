@@ -1,8 +1,9 @@
 import React from "react";
-import { Bell, Menu, Moon, Search, Sun } from "lucide-react";
+import { Menu, Moon, Search, Sun } from "lucide-react";
 import { useAuth } from "../../contexts/auth-context";
 import { useTheme } from "../../contexts/theme-context";
 import { LanguageSwitcher } from "../ui/language-switcher";
+import { NotificationDropdown } from "../ui/notification-dropdown";
 
 interface HeaderProps {
   onMenuButtonClick: () => void;
@@ -45,12 +46,8 @@ export function Header({ onMenuButtonClick }: HeaderProps) {
           <div className="flex items-center space-x-4">
             <LanguageSwitcher />
             
-            <button
-              type="button"
-              className="p-1 rounded-full text-gray-500 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
-            >
-              <Bell className="h-5 w-5" />
-            </button>
+            {/* Notification Dropdown */}
+            <NotificationDropdown />
             
             <button
               type="button"
@@ -75,11 +72,11 @@ export function Header({ onMenuButtonClick }: HeaderProps) {
                   {user?.avatar ? (
                     <img 
                       src={user.avatar} 
-                      alt={`${user.firstName}'s avatar`} 
+                      alt={`${user.name}'s avatar`} 
                       className="h-8 w-8 object-cover"
                     />
                   ) : (
-                    <span className="font-medium text-gray-700">{user?.firstName?.[0]}</span>
+                    <span className="font-medium text-gray-700">{user?.name?.[0]}</span>
                   )}
                 </div>
               </button>
@@ -87,7 +84,7 @@ export function Header({ onMenuButtonClick }: HeaderProps) {
               {showProfileMenu && (
                 <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none">
                   <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.firstName}</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.name}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
                   </div>
                   <a

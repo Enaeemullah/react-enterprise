@@ -22,21 +22,23 @@
     "passwordChangeSuccess": "Password changed successfully!",
     "passwordChangeError": "Failed to change password. Please check your current password."
   },
-  "inventory": {
-    "basicInfo": "Inventory Management",
-    "description": "Manage your products, stock levels, and suppliers",
-    "addProduct": "Add New Product",
-    "productName": "Product Name",
-    "productDescription": "Product Description",
-    "quantity": "Quantity",
-    "price": "Price",
-    "supplier": "Supplier",
-    "addSupplier": "Add Supplier",
-    "supplierName": "Supplier Name",
-    "supplierContact": "Supplier Contact",
-    "saveProduct": "Save Product",
-    "updateProduct": "Update Product",
-    "deleteProduct": "Delete Product"
+"inventory": {
+    "title": "Inventory Management",
+    "description": "Manage your inventory items and stock levels",
+    "addItem": "Add Item",
+    "editItem": "Edit Item",
+    "transfer": "Transfer Stock",
+    "export": "Export Data",
+    "import": "Import Data",
+    "bulkUpload": {
+      "title": "Bulk Upload",
+      "dragDrop": "Drag and drop files here, or click to select files",
+      "fileTypes": "Supported formats: XLSX, XLS, CSV",
+      "selectFile": "Select File",
+      "downloadTemplate": "Download Template",
+      "emptyFile": "The uploaded file is empty",
+      "error": "Failed to process file"
+    }
   },
   "common": {
     "save": "Save Changes",
