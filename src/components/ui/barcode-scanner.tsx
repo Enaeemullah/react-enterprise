@@ -17,7 +17,7 @@ export function BarcodeScanner({ isOpen, onClose, onScan, title = "Scan Barcode"
   const [flashOn, setFlashOn] = useState(false);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const scanIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -54,7 +54,7 @@ export function BarcodeScanner({ isOpen, onClose, onScan, title = "Scan Barcode"
         // Check if flash is available
         const track = mediaStream.getVideoTracks()[0];
         const capabilities = track.getCapabilities();
-        setHasFlash(!!capabilities.torch);
+        setHasFlash('torch' in capabilities);
 
         // Start scanning when video is ready
         videoRef.current.onloadedmetadata = () => {
@@ -89,7 +89,7 @@ export function BarcodeScanner({ isOpen, onClose, onScan, title = "Scan Barcode"
     try {
       const track = stream.getVideoTracks()[0];
       await track.applyConstraints({
-        advanced: [{ torch: !flashOn }]
+        advanced: [{ torch: !flashOn } as MediaTrackConstraintSet & { torch: boolean }]
       });
       setFlashOn(!flashOn);
     } catch (err) {

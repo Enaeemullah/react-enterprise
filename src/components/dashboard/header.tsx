@@ -111,11 +111,11 @@ export function Header({ onMenuButtonClick }: HeaderProps) {
                   {user?.avatar ? (
                     <img 
                       src={user.avatar} 
-                      alt={`${user.name}'s avatar`} 
+                      alt={`${user.firstName}'s avatar`} 
                       className="h-8 w-8 object-cover"
                     />
                   ) : (
-                    <span className="font-medium text-gray-700">{user?.name?.[0]}</span>
+                    <span className="font-medium text-gray-700">{user?.firstName?.[0]}</span>
                   )}
                 </div>
               </button>
@@ -123,7 +123,7 @@ export function Header({ onMenuButtonClick }: HeaderProps) {
               {showProfileMenu && (
                 <div className="absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 focus:outline-none">
                   <div className="px-4 py-2 border-b border-gray-100 dark:border-gray-700">
-                    <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.name}</p>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white">{user?.firstName}</p>
                     <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user?.email}</p>
                   </div>
                   <a
