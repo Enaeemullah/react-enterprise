@@ -10,7 +10,9 @@ import { useProfile } from "../../contexts/profile-context";
 import { useTranslation } from "react-i18next";
 
 const profileSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
+  firstName: z.string().min(2, "First name must be at least 2 characters"),
+  lastName: z.string().min(2, "Last name must be at least 2 characters"),
+  email: z.string().email("Please enter a valid email address"),
   bio: z.string().optional(),
   location: z.string().optional(),
   phoneNumber: z.string().optional(),
@@ -44,7 +46,9 @@ export function ProfilePage() {
   } = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: user?.name || "",
+      firstName: user?.firstName || "",
+      lastName: "", // Add lastName field
+      email: user?.email || "",
       bio: profile?.bio || "",
       location: profile?.location || "",
       phoneNumber: profile?.phoneNumber || "",
@@ -149,10 +153,25 @@ export function ProfilePage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleProfileSubmit(onProfileSubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <Input
+                  label="First Name"
+                  error={profileErrors.firstName?.message}
+                  {...registerProfile("firstName")}
+                />
+                
+                <Input
+                  label="Last Name"
+                  error={profileErrors.lastName?.message}
+                  {...registerProfile("lastName")}
+                />
+              </div>
+
               <Input
-                label={t("profile.name")}
-                error={profileErrors.name?.message}
-                {...registerProfile("name")}
+                label="Email"
+                type="email"
+                error={profileErrors.email?.message}
+                {...registerProfile("email")}
               />
               
               <div>
@@ -255,7 +274,7 @@ export function ProfilePage() {
               
               <div className="flex justify-end">
                 <Button type="submit">
-                  {t("profile.updatePassword")}
+                  Update Password
                 </Button>
               </div>
             </form>

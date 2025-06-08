@@ -33,6 +33,13 @@ export const API_ENDPOINTS = {
     logout: '/auth/logout',
     changePassword: '/auth/change-password'
   },
+    users: {
+    list: '/users',
+    create: '/users',
+    update: '/users/:id',
+    delete: '/users/:id',
+    detail: '/users/:id',
+  },
   inventory: {
     list: '/inventory/items',
     create: '/inventory/create',
@@ -123,6 +130,13 @@ export const API_ENDPOINTS = {
     get: '/profile',
     update: '/profile',
     updatePreferences: '/profile/preferences',
+  },
+    organization: {
+    get: '/organization',
+    update: '/organization',
+    stats: '/organization/stats',
+    validateCode: '/organization/validate-code',
+    uploadLogo: '/organization/upload-logo',
   },
     employees: {
     list: '/employees',

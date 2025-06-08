@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, Grid, List } from "lucide-react";
+import { Search, Grid, List, Scan } from "lucide-react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 
@@ -18,6 +18,7 @@ interface POSFiltersProps {
   categories: string[];
   filteredCount: number;
   totalCount: number;
+  onScanBarcode?: () => void;
 }
 
 export function POSFilters({
@@ -35,20 +36,32 @@ export function POSFilters({
   categories,
   filteredCount,
   totalCount,
+  onScanBarcode,
 }: POSFiltersProps) {
   return (
     <>
       {/* Search and Filters */}
       <div className="flex flex-col sm:flex-row gap-3">
-        <div className="relative">
+        <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
           <Input
             type="text"
             placeholder="Search products..."
             value={searchTerm}
             onChange={(e) => onSearchChange(e.target.value)}
-            className="pl-10 w-full sm:w-64"
+            className="pl-10 w-full"
           />
+          {onScanBarcode && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onScanBarcode}
+              className="absolute right-2 top-1/2 transform -translate-y-1/2 p-1 h-8 w-8"
+              title="Scan barcode"
+            >
+              <Scan className="h-4 w-4" />
+            </Button>
+          )}
         </div>
         
         <select

@@ -1,5 +1,5 @@
 import React from "react";
-import { Menu, Moon, Search, Sun } from "lucide-react";
+import { Menu, Moon, Search, Sun, Maximize, Minimize } from "lucide-react";
 import { useAuth } from "../../contexts/auth-context";
 import { useTheme } from "../../contexts/theme-context";
 import { LanguageSwitcher } from "../ui/language-switcher";
@@ -13,6 +13,31 @@ export function Header({ onMenuButtonClick }: HeaderProps) {
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [showProfileMenu, setShowProfileMenu] = React.useState(false);
+  const [isFullscreen, setIsFullscreen] = React.useState(false);
+
+  // Check if currently in fullscreen mode
+  React.useEffect(() => {
+    const checkFullscreen = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', checkFullscreen);
+    return () => document.removeEventListener('fullscreenchange', checkFullscreen);
+  }, []);
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!document.fullscreenElement) {
+        // Enter fullscreen
+        await document.documentElement.requestFullscreen();
+      } else {
+        // Exit fullscreen
+        await document.exitFullscreen();
+      }
+    } catch (error) {
+      console.error('Error toggling fullscreen:', error);
+    }
+  };
 
   return (
     <header className="sticky top-0 z-10 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
@@ -48,6 +73,20 @@ export function Header({ onMenuButtonClick }: HeaderProps) {
             
             {/* Notification Dropdown */}
             <NotificationDropdown />
+            
+            {/* Fullscreen Toggle */}
+            <button
+              type="button"
+              className="p-1 rounded-full text-gray-500 hover:text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500 transition-colors"
+              onClick={toggleFullscreen}
+              title={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+            >
+              {isFullscreen ? (
+                <Minimize className="h-5 w-5" />
+              ) : (
+                <Maximize className="h-5 w-5" />
+              )}
+            </button>
             
             <button
               type="button"

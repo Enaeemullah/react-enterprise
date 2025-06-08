@@ -15,6 +15,7 @@ import { POSCart } from "../../../components/pos/pos-cart";
 import { CustomerSearchModal } from "../../../components/pos/customer-search-modal";
 import { PaymentModal } from "../../../components/pos/payment-modal";
 import { ReceiptModal } from "../../../components/pos/receipt-modal";
+import { BarcodeScanner } from "../../../components/ui/barcode-scanner";
 
 interface CartItem {
   id: string;
@@ -34,7 +35,7 @@ export function POSPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { items, setItems } = useInventory();
-  const { showError, setIsLoading } = useGlobal();
+  const { showError, showSuccess, setIsLoading } = useGlobal();
 
   // Cart and transaction states
   const [cart, setCart] = useState<CartItem[]>([]);
@@ -44,6 +45,7 @@ export function POSPage() {
   const [showPayment, setShowPayment] = useState(false);
   const [showCustomerSearch, setShowCustomerSearch] = useState(false);
   const [showReceipt, setShowReceipt] = useState(false);
+  const [showBarcodeScanner, setShowBarcodeScanner] = useState(false);
   const [lastTransaction, setLastTransaction] = useState<{
     items: CartItem[];
     subtotal: number;
@@ -126,6 +128,24 @@ export function POSPage() {
         return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
       }
     });
+
+  const handleBarcodeScanned = (barcode: string) => {
+    console.log('Barcode scanned in POS:', barcode);
+    
+    // Find item by barcode, SKU, or name
+    const foundItem = items.find(item => 
+      item.sku === barcode || 
+      item.barcode === barcode ||
+      item.name.toLowerCase().includes(barcode.toLowerCase())
+    );
+
+    if (foundItem) {
+      addToCart(foundItem);
+      showSuccess(`Added ${foundItem.name} to cart`);
+    } else {
+      showError(`No item found with barcode: ${barcode}`);
+    }
+  };
 
   const addToCart = (item: InventoryItem) => {
     if (item.status === "out-of-stock") {
@@ -253,6 +273,7 @@ export function POSPage() {
             categories={categories}
             filteredCount={filteredItems.length}
             totalCount={items.length}
+            onScanBarcode={() => setShowBarcodeScanner(true)}
           />
         </div>
       </div>
@@ -330,6 +351,14 @@ export function POSPage() {
           cashierName={user?.firstName || "Unknown"}
         />
       )}
+
+      {/* Barcode Scanner */}
+      <BarcodeScanner
+        isOpen={showBarcodeScanner}
+        onClose={() => setShowBarcodeScanner(false)}
+        onScan={handleBarcodeScanned}
+        title="Scan Product Barcode"
+      />
     </div>
   );
 }

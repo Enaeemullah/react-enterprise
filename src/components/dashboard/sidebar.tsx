@@ -3,9 +3,8 @@ import { Link, useLocation } from "react-router-dom";
 import { 
   Package, Users, Home, ShoppingCart, BarChart3, 
   Layers, ChevronRight, X, Building2, Shield, Store,
-  Boxes, Activity,
-  Flower2,
-  UserCog
+  Boxes, Activity, Upload, ArrowLeftRight, Tag, FolderOpen,
+  Settings, User
 } from "lucide-react";
 import { cn } from "../../lib/utils";
 import { useAuth } from "../../contexts/auth-context";
@@ -23,17 +22,19 @@ const navigation = [
     children: [
       { name: "All Items", href: "/dashboard/inventory" },
       { name: "Add Item", href: "/dashboard/inventory/add" },
-      { name: "Bulk Upload", href: "/dashboard/inventory/bulk-upload"},
-      { name: "Transfer", href: "/dashboard/inventory/transfer"},
-      { name: "Branches", href: "/dashboard/inventory/branches"},
-      { name: "Brands", href: "/dashboard/inventory/brands"},
+      { name: "Bulk Upload", href: "/dashboard/inventory/bulk-upload", icon: Upload },
+      { name: "Transfer", href: "/dashboard/inventory/transfer", icon: ArrowLeftRight },
+      { name: "Branches", href: "/dashboard/inventory/branches", icon: Building2 },
       { name: "Suppliers", href: "/dashboard/inventory/suppliers" },
-      { name: "Categories", href: "/dashboard/inventory/categories"},
+      { name: "Brands", href: "/dashboard/inventory/brands", icon: Tag },
+      { name: "Categories", href: "/dashboard/inventory/categories", icon: FolderOpen },
     ],
   },
   { name: "Point of Sale", href: "/dashboard/pos", icon: Store },
   { name: "Services", href: "/dashboard/services", icon: ShoppingCart },
   { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },
+  { name: "Customers", href: "/dashboard/customers", icon: Users },
+  { name: "Projects", href: "/dashboard/projects", icon: Layers },
   { 
     name: "Security", 
     icon: Shield,
@@ -45,12 +46,11 @@ const navigation = [
     ],
   },
   {
-    name: "User Management",
-    icon: UserCog,
+    name: "Settings",
+    icon: Settings,
     children: [
-      { name: "All Users", href: "/dashboard/users" },
-      { name: "Add User", href: "/dashboard/users/add" },
-      { name: "User Groups", href: "/dashboard/users/groups" },
+      { name: "User Profile", href: "/dashboard/profile", icon: User },
+      { name: "Organization", href: "/dashboard/settings", icon: Building2 },
     ],
   },
 ];
@@ -73,7 +73,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       <div className="flex items-center justify-center h-16 px-6 border-b border-gray-200 dark:border-gray-700">
         <Link to="/dashboard" className="flex items-center">
           <span className="text-xl font-semibold text-primary-600 dark:text-primary-400">
-            <Flower2 className="h-8 w-8 mr-2" />
+            Enterprise
           </span>
         </Link>
       </div>
@@ -119,7 +119,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
                           )}
                           onClick={onClose}
                         >
-                          {child.name}
+                          <div className="flex items-center">
+                            {child.icon && <child.icon className="mr-2 h-4 w-4" />}
+                            {child.name}
+                          </div>
                         </Link>
                       ))}
                     </div>
@@ -149,11 +152,19 @@ export function Sidebar({ open, onClose }: SidebarProps) {
       <div className="border-t border-gray-200 dark:border-gray-700 p-4">
         <div className="flex items-center space-x-3">
           <div className="h-10 w-10 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden">
-              <span className="font-medium text-gray-700">{user?.firstName?.[0]}</span>
+            {user?.avatar ? (
+              <img 
+                src={user.avatar} 
+                alt={`${user.name}'s avatar`} 
+                className="h-10 w-10 object-cover"
+              />
+            ) : (
+              <span className="font-medium text-gray-700">{user?.name?.[0]}</span>
+            )}
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-              {user?.firstName}
+              {user?.name}
             </p>
             <p className="text-xs text-gray-500 dark:text-gray-400 truncate">
               {user?.email}
