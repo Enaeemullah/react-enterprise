@@ -163,7 +163,7 @@ export function InventoryListPage() {
         CostPrice: item.costPrice || '',
         SKU: item.sku,
         Brand: item.brand || '',
-        BranchId: '', // Add branch ID when available
+        BranchId: item.brandId || '',
         ImageUrl: item.imageUrl || '',
         Status: item.status,
         LastUpdated: item.lastUpdated,
