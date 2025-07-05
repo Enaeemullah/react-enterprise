@@ -109,7 +109,7 @@ export const API_ENDPOINTS = {
     update: '/profile',
     updatePreferences: '/profile/preferences',
   },
-    employees: {
+  employees: {
     list: '/employees',
     create: '/employees',
     update: '/employees/:id',
@@ -129,5 +129,15 @@ export const API_ENDPOINTS = {
     update: '/positions/:id',
     delete: '/positions/:id',
     detail: '/positions/:id',
+  },
+  currencies: {
+    list: '/currencies',
+    create: '/currencies',
+    update: '/currencies/:id',
+    delete: '/currencies/:id',
+    detail: '/currencies/:id',
+    setBase: '/currencies/:id/set-base',
+    updateRates: '/currencies/update-rates',
+    exchangeRate: '/currencies/exchange-rate',
   },
 };

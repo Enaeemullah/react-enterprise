@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { 
   Package, Users, Home, ShoppingCart, BarChart3, 
   Layers, ChevronRight, X, Building2, Shield, Store,
-  Boxes, Activity,
+  Boxes, Activity, DollarSign,
   Flower2
 } from "lucide-react";
 import { cn } from "../../lib/utils";
@@ -32,6 +32,7 @@ const navigation = [
   { name: "Reports", href: "/dashboard/reports", icon: BarChart3 },
   { name: "Customers", href: "/dashboard/customers", icon: Users },
   { name: "Projects", href: "/dashboard/projects", icon: Layers },
+  { name: "Currencies", href: "/dashboard/currencies", icon: DollarSign },
   { 
     name: "Security", 
     icon: Shield,

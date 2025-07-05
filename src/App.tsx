@@ -34,6 +34,7 @@ import { ModulesPage } from "./pages/dashboard/modules";
 import { ActionsPage } from "./pages/dashboard/actions";
 import { CustomersPage } from "./pages/dashboard/customers";
 import { CustomerServicesPage } from "./pages/dashboard/customers/services";
+import { CurrenciesPage } from "./pages/dashboard/currencies";
 import { NotFoundPage } from "./pages/not-found";
 
 function App() {
@@ -46,14 +47,14 @@ function App() {
               <Router>
                 <Routes>
                   {/* Redirect root to signup */}
-                  <Route path="/" element={<Navigate to="/auth/signup\" replace />} />
+                  <Route path="/" element={<Navigate to="/auth/signup" replace />} />
                   
                   {/* Auth routes */}
                   <Route path="/auth" element={<AuthLayout />}>
                     <Route path="login" element={<LoginPage />} />
                     <Route path="signup" element={<SignupPage />} />
                     <Route path="logout" element={<LogoutPage />} />
-                    <Route path="" element={<Navigate to="/auth/signup\" replace />} />
+                    <Route path="" element={<Navigate to="/auth/signup" replace />} />
                   </Route>
                   
                   {/* Dashboard routes */}
@@ -75,6 +76,9 @@ function App() {
                     {/* Customer routes */}
                     <Route path="customers" element={<CustomersPage />} />
                     <Route path="customers/services" element={<CustomerServicesPage />} />
+                    
+                    {/* Currency routes */}
+                    <Route path="currencies" element={<CurrenciesPage />} />
                     
                     {/* Security routes */}
                     <Route path="roles" element={<RolesPage />} />
