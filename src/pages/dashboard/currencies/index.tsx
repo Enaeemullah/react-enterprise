@@ -1,35 +1,78 @@
-import React, { useState } from "react";
-import { Plus, DollarSign, RefreshCw } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { currencyService } from "../../../services/currency.service";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui/card";
 import { Button } from "../../../components/ui/button";
-import { CurrencyForm, Currency } from "../../../components/currencies/currency-form";
-import { CurrencyList } from "../../../components/currencies/currency-list";
+import { Input } from "../../../components/ui/input";
+import { toast } from "sonner";
+
+const currencySchema = z.object({
+  code: z.string().min(1, "Code is required"),
+  shortName: z.string().min(1, "Short name is required"),
+  description: z.string().min(1, "Description is required"),
+});
+
+type CurrencyFormValues = z.infer<typeof currencySchema>;
 
 export function CurrenciesPage() {
-  const [showForm, setShowForm] = useState(false);
-  const [editingCurrency, setEditingCurrency] = useState<Currency | null>(null);
-  const [isUpdatingRates, setIsUpdatingRates] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [currencies, setCurrencies] = useState<any[]>([]);
 
-  const handleEdit = (currency: Currency) => {
-    setEditingCurrency(currency);
-    setShowForm(true);
-  };
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue
+  } = useForm<CurrencyFormValues>({
+    resolver: zodResolver(currencySchema),
+  });
 
-  const handleClose = () => {
-    setShowForm(false);
-    setEditingCurrency(null);
-  };
+  // Fetch currencies on component mount
+  useEffect(() => {
+    const loadCurrencies = async () => {
+      setIsLoading(true);
+      try {
+        const data = await currencyService.getCurrencies();
+        setCurrencies(data);
+        if (data.length > 0) {
+          setValue("code", data[0].code);
+          setValue("shortName", data[0].shortName);
+          setValue("description", data[0].description);
+        }
+      } catch (error) {
+        toast.error("Failed to load currencies");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    loadCurrencies();
+  }, [setValue]);
 
-  const handleUpdateExchangeRates = async () => {
-    setIsUpdatingRates(true);
+  const onSubmit = async (data: CurrencyFormValues) => {
+    setIsSubmitting(true);
     try {
-      // Simulate API call to update exchange rates
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log("Exchange rates updated");
+      // Check if we're updating an existing currency or creating new
+      const existingCurrency = currencies.find(c => c.code === data.code);
+      
+      if (existingCurrency) {
+        await currencyService.updateCurrency(existingCurrency.id, data);
+        toast.success("Currency updated successfully");
+      } else {
+        await currencyService.createCurrency(data);
+        toast.success("Currency created successfully");
+      }
+      
+      // Refresh the list
+      const updatedCurrencies = await currencyService.getCurrencies();
+      setCurrencies(updatedCurrencies);
     } catch (error) {
-      console.error("Failed to update exchange rates:", error);
+      toast.error("Failed to save currency");
     } finally {
-      setIsUpdatingRates(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -41,118 +84,105 @@ export function CurrenciesPage() {
             Currencies
           </h1>
           <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            Manage currencies and exchange rates for international transactions
+            Manage currency codes and descriptions
           </p>
         </div>
-        <div className="flex space-x-3">
-          <Button
-            onClick={handleUpdateExchangeRates}
-            variant="outline"
-            className="flex items-center"
-            isLoading={isUpdatingRates}
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Update Rates
-          </Button>
-          <Button onClick={() => setShowForm(true)} className="flex items-center">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Currency
-          </Button>
-        </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Total Currencies
-                </p>
-                <h3 className="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">
-                  4
-                </h3>
-              </div>
-              <div className="rounded-full bg-primary-50 dark:bg-primary-900/20 p-3">
-                <DollarSign className="h-6 w-6 text-primary-600 dark:text-primary-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Active Currencies
-                </p>
-                <h3 className="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">
-                  4
-                </h3>
-              </div>
-              <div className="rounded-full bg-success-50 dark:bg-success-900/20 p-3">
-                <DollarSign className="h-6 w-6 text-success-600 dark:text-success-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Base Currency
-                </p>
-                <h3 className="mt-1 text-2xl font-semibold text-gray-900 dark:text-white">
-                  USD
-                </h3>
-              </div>
-              <div className="rounded-full bg-warning-50 dark:bg-warning-900/20 p-3">
-                <DollarSign className="h-6 w-6 text-warning-600 dark:text-warning-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-500 dark:text-gray-400">
-                  Last Updated
-                </p>
-                <h3 className="mt-1 text-lg font-semibold text-gray-900 dark:text-white">
-                  Today
-                </h3>
-              </div>
-              <div className="rounded-full bg-secondary-50 dark:bg-secondary-900/20 p-3">
-                <RefreshCw className="h-6 w-6 text-secondary-600 dark:text-secondary-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {showForm ? (
+      <div className="max-w-2xl mx-auto">
         <Card>
           <CardHeader>
-            <CardTitle>
-              {editingCurrency ? "Edit Currency" : "Add New Currency"}
-            </CardTitle>
+            <CardTitle>Currency Management</CardTitle>
           </CardHeader>
           <CardContent>
-            <CurrencyForm
-              currency={editingCurrency}
-              onClose={handleClose}
-              onSuccess={handleClose}
-            />
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              <div className="grid grid-cols-3 gap-4">
+                <Input
+                  label="Code"
+                  placeholder="101"
+                  error={errors.code?.message}
+                  {...register("code")}
+                />
+                
+                <Input
+                  label="Short Name"
+                  placeholder="PKR"
+                  error={errors.shortName?.message}
+                  {...register("shortName")}
+                />
+                
+                <Input
+                  label="Description"
+                  placeholder="Pakistani Rupees"
+                  error={errors.description?.message}
+                  {...register("description")}
+                />
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <Button 
+                  type="button" 
+                  variant="outline"
+                  onClick={() => reset()}
+                  disabled={isLoading || isSubmitting}
+                >
+                  Reset
+                </Button>
+                
+                <Button 
+                  type="submit" 
+                  disabled={isLoading || isSubmitting}
+                  isLoading={isSubmitting}
+                >
+                  {isSubmitting ? "Saving..." : "Save"}
+                </Button>
+              </div>
+            </form>
           </CardContent>
         </Card>
-      ) : (
-        <CurrencyList onEdit={handleEdit} />
+      </div>
+
+      {/* Currency List */}
+      {currencies.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Existing Currencies</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead className="bg-gray-50 dark:bg-gray-700">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Code
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Short Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                      Description
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                  {currencies.map((currency, index) => (
+                    <tr key={index} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                        {currency.code}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        {currency.shortName}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                        {currency.description}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
       )}
     </div>
   );
