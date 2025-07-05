@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../../components/ui
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
 import { Receipt } from "../../../components/pos/receipt";
+import { EpsonPrinter, ReceiptFormatter } from "../../../utils/epson-printer";
 import { generateId } from "../../../lib/utils";
 import { useAuth } from "../../../contexts/auth-context";
 import { useInventory } from "../../../contexts/inventory-context";
@@ -204,65 +205,69 @@ interface ReceiptModalProps {
 }
 
 function ReceiptModal({ transaction, onClose, onNewTransaction }: ReceiptModalProps) {
-  const receiptRef = React.useRef<HTMLDivElement>(null);
   const { user } = useAuth();
+  const [isPrinting, setIsPrinting] = useState(false);
 
-  const handlePrint = () => {
-    if (receiptRef.current) {
-      const printWindow = window.open('', '_blank');
-      if (printWindow) {
-        printWindow.document.write(`
-          <html>
-            <head>
-              <title>Print Receipt</title>
-              <style>
-                body {
-                  font-family: monospace;
-                  margin: 0;
-                  padding: 20px;
-                  width: 300px;
-                }
-                pre {
-                  white-space: pre-wrap;
-                  margin: 0;
-                  font-size: 12px;
-                  line-height: 1.2;
-                }
-                @media print {
-                  body {
-                    width: 80mm;
-                  }
-                  @page {
-                    margin: 0;
-                    size: 80mm auto;
-                  }
-                }
-              </style>
-            </head>
-            <body>
-              ${receiptRef.current.innerHTML}
-              <script>
-                window.onload = function() {
-                  window.print();
-                  window.close();
-                };
-              </script>
-            </body>
-          </html>
-        `);
-        printWindow.document.close();
-      }
+  // Generate Epson-compatible receipt content
+  const generateEpsonReceipt = () => {
+    const formatter = new ReceiptFormatter(42);
+    let content = '';
+
+    // Header
+    content += EpsonPrinter.generateHeader(
+      "Enterprise Store",
+      "123 Main St, City, State 12345",
+      "(555) 123-4567"
+    );
+
+    // Transaction info
+    content += formatter.formatTransactionInfo(
+      transaction.transactionId,
+      transaction.date,
+      user?.firstName || "Unknown"
+    );
+
+    // Items
+    content += EpsonPrinter.commands.lineFeed;
+    content += 'ITEMS:' + EpsonPrinter.commands.lineFeed;
+    content += EpsonPrinter.divider('-', 42) + EpsonPrinter.commands.lineFeed;
+
+    transaction.items.forEach(item => {
+      const itemTotal = item.quantity * item.price;
+      content += formatter.formatItemLine(item.name, item.quantity, item.price, itemTotal);
+      content += EpsonPrinter.commands.lineFeed;
+    });
+
+    // Totals
+    content += formatter.formatTotals(transaction.subtotal, transaction.tax, transaction.total);
+
+    // Payment method
+    content += EpsonPrinter.commands.lineFeed;
+    content += `Payment Method: ${transaction.paymentMethod}` + EpsonPrinter.commands.lineFeed;
+
+    // Footer
+    content += EpsonPrinter.generateFooter();
+
+    return content;
+  };
+
+  const handleEpsonPrint = async () => {
+    setIsPrinting(true);
+    try {
+      const receiptContent = generateEpsonReceipt();
+      await EpsonPrinter.print(receiptContent);
+    } catch (error) {
+      console.error('Printing failed:', error);
+      // Fallback to regular browser print
+      window.print();
+    } finally {
+      setIsPrinting(false);
     }
   };
 
-  React.useEffect(() => {
-    const timer = setTimeout(handlePrint, 500);
-    return () => clearTimeout(timer);
-  }, []);
-
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full">
+      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-medium text-gray-900 dark:text-white">
             Receipt
@@ -275,20 +280,23 @@ function ReceiptModal({ transaction, onClose, onNewTransaction }: ReceiptModalPr
           </button>
         </div>
 
-        <div ref={receiptRef}>
-          <Receipt
-            {...transaction}
-            cashierName={user?.name || "Unknown"}
-            storeName="Enterprise Store"
-            storeAddress="123 Main St, City, State 12345"
-            storePhone="(555) 123-4567"
-          />
-        </div>
+        <Receipt
+          {...transaction}
+          cashierName={user?.firstName || "Unknown"}
+          storeName="Enterprise Store"
+          storeAddress="123 Main St, City, State 12345"
+          storePhone="(555) 123-4567"
+        />
 
         <div className="mt-6 flex justify-end space-x-3">
-          <Button onClick={handlePrint} className="flex items-center">
+          <Button 
+            onClick={handleEpsonPrint} 
+            className="flex items-center"
+            disabled={isPrinting}
+            isLoading={isPrinting}
+          >
             <Printer className="h-4 w-4 mr-2" />
-            Print Again
+            {isPrinting ? "Printing..." : "Print to Epson"}
           </Button>
           <Button onClick={onNewTransaction}>
             New Transaction
@@ -396,7 +404,7 @@ export function POSPage() {
               Point of Sale
             </h1>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
-              Process transactions and manage sales
+              Process transactions with Epson receipt printer support
             </p>
           </div>
           <div className="relative w-full sm:w-96">
